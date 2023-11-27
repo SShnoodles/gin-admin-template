@@ -10,7 +10,7 @@ import (
 )
 
 type MenuQuery struct {
-	models.PageInfo
+	services.PageInfo
 	Name string `form:"name"`
 }
 
@@ -22,7 +22,7 @@ func GetMenus(c *gin.Context) {
 		return
 	}
 	var menus []models.Menu
-	page := models.Pagination(initializations.DB, q.PageIndex, q.PageSize, &menus)
+	page := services.Pagination(initializations.DB, q.PageIndex, q.PageSize, &menus)
 	c.JSON(http.StatusOK, page)
 }
 
@@ -45,7 +45,7 @@ func CreateMenu(c *gin.Context) {
 		return
 	}
 	menu.Id = initializations.IdGenerate()
-	err = services.Insert(menu)
+	err = services.Insert(&menu)
 	if err != nil {
 		c.String(http.StatusBadRequest, "参数错误")
 		return
@@ -62,7 +62,7 @@ func UpdateMenu(c *gin.Context) {
 		return
 	}
 	menu.Id = int64(id)
-	err = services.Update(menu)
+	err = services.Update(&menu)
 	if err != nil {
 		c.String(http.StatusBadRequest, "更新失败")
 		return

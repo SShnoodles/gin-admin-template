@@ -4,12 +4,11 @@ import "time"
 
 type Menu struct {
 	Id        int64     `json:"id" gorm:"primaryKey"`
-	Pid       int64     `json:"pid"`
-	Name      string    `json:"name"`
-	Path      string    `json:"path"`
-	Icon      string    `json:"icon"`
-	Target    string    `json:"target"`
-	Sort      int32     `json:"sort"`
+	Pid       *int64    `json:"pid"`
+	Name      string    `json:"name" gorm:"not null;size:50"`
+	Path      string    `json:"path" gorm:"not null;size:200"`
+	Icon      string    `json:"icon" gorm:"not null;size:200"`
+	Sort      int32     `json:"sort" gorm:"not null"`
 	CreatedAt time.Time `json:"createdAt"`
 	UpdatedAt time.Time `json:"updatedAt"`
 }

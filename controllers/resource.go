@@ -10,7 +10,7 @@ import (
 )
 
 type ResourceQuery struct {
-	models.PageInfo
+	services.PageInfo
 	Name string `form:"name"`
 }
 
@@ -22,7 +22,7 @@ func GetResources(c *gin.Context) {
 		return
 	}
 	var resource []models.Resource
-	page := models.Pagination(initializations.DB, q.PageIndex, q.PageSize, &resource)
+	page := services.Pagination(initializations.DB, q.PageIndex, q.PageSize, &resource)
 	c.JSON(http.StatusOK, page)
 }
 

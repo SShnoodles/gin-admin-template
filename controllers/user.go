@@ -10,7 +10,7 @@ import (
 )
 
 type UserQuery struct {
-	models.PageInfo
+	services.PageInfo
 	Username string `form:"username"`
 	Mobile   string `form:"mobile"`
 }
@@ -23,7 +23,7 @@ func GetUsers(c *gin.Context) {
 		return
 	}
 	var users []models.User
-	page := models.Pagination(initializations.DB, q.PageIndex, q.PageSize, &users)
+	page := services.Pagination(initializations.DB, q.PageIndex, q.PageSize, &users)
 	c.JSON(http.StatusOK, page)
 }
 

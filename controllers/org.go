@@ -10,7 +10,7 @@ import (
 )
 
 type OrgQuery struct {
-	models.PageInfo
+	services.PageInfo
 	Name string `form:"name"`
 }
 
@@ -22,7 +22,7 @@ func GetOrgs(c *gin.Context) {
 		return
 	}
 	var orgs []models.Org
-	page := models.Pagination(initializations.DB, q.PageIndex, q.PageSize, &orgs)
+	page := services.Pagination(initializations.DB, q.PageIndex, q.PageSize, &orgs)
 	c.JSON(http.StatusOK, page)
 }
 

@@ -10,7 +10,7 @@ import (
 )
 
 type RoleQuery struct {
-	models.PageInfo
+	services.PageInfo
 	Name string `form:"name"`
 }
 
@@ -22,7 +22,7 @@ func GetRoles(c *gin.Context) {
 		return
 	}
 	var roles []models.Role
-	page := models.Pagination(initializations.DB, q.PageIndex, q.PageSize, &roles)
+	page := services.Pagination(initializations.DB, q.PageIndex, q.PageSize, &roles)
 	c.JSON(http.StatusOK, page)
 }
 
