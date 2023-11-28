@@ -46,7 +46,7 @@ func CreateUser(c *gin.Context) {
 		return
 	}
 	user.Id = initializations.IdGenerate()
-	err = services.Insert(user)
+	err = services.Insert(&user)
 	if err != nil {
 		c.String(http.StatusBadRequest, "参数错误")
 		return

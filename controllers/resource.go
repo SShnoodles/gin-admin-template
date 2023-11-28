@@ -45,7 +45,7 @@ func CreateResource(c *gin.Context) {
 		return
 	}
 	resource.Id = initializations.IdGenerate()
-	err = services.Insert(resource)
+	err = services.Insert(&resource)
 	if err != nil {
 		c.String(http.StatusBadRequest, "参数错误")
 		return
@@ -62,7 +62,7 @@ func UpdateResource(c *gin.Context) {
 		return
 	}
 	resource.Id = int64(id)
-	err = services.Update(resource)
+	err = services.Update(&resource)
 	if err != nil {
 		c.String(http.StatusBadRequest, "更新失败")
 		return

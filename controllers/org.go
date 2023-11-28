@@ -14,6 +14,11 @@ type OrgQuery struct {
 	Name string `form:"name"`
 }
 
+type OrgAdd struct {
+	models.Org
+	MenuIds []int64 `json:"menuIds"`
+}
+
 func GetOrgs(c *gin.Context) {
 	var q OrgQuery
 	err := c.ShouldBindQuery(&q)
@@ -38,18 +43,19 @@ func GetOrg(c *gin.Context) {
 }
 
 func CreateOrg(c *gin.Context) {
-	var org models.Org
+	var org OrgAdd
 	err := c.ShouldBindJSON(&org)
 	if err != nil {
 		c.String(http.StatusBadRequest, "参数错误")
 		return
 	}
 	org.Id = initializations.IdGenerate()
-	err = services.Insert(org)
+	err = services.Insert(&org)
 	if err != nil {
 		c.String(http.StatusBadRequest, "新增失败")
 		return
 	}
+	// TODO
 	c.JSON(http.StatusOK, models.NewIdWrapper(org.Id))
 }
 
@@ -62,7 +68,7 @@ func UpdateOrg(c *gin.Context) {
 		return
 	}
 	org.Id = int64(id)
-	err = services.Update(org)
+	err = services.Update(&org)
 	if err != nil {
 		c.String(http.StatusBadRequest, "更新失败")
 		return

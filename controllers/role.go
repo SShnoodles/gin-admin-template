@@ -45,7 +45,7 @@ func CreateRole(c *gin.Context) {
 		return
 	}
 	role.Id = initializations.IdGenerate()
-	err = services.Insert(role)
+	err = services.Insert(&role)
 	if err != nil {
 		c.String(http.StatusBadRequest, "参数错误")
 		return
@@ -62,7 +62,7 @@ func UpdateRole(c *gin.Context) {
 		return
 	}
 	role.Id = int64(id)
-	err = services.Update(role)
+	err = services.Update(&role)
 	if err != nil {
 		c.String(http.StatusBadRequest, "更新失败")
 		return
