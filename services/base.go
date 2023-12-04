@@ -10,6 +10,14 @@ func FindById[T any](t *T, id int64) error {
 	return initializations.DB.First(t, "id = ?", id).Error
 }
 
+func FindByName[T any](t *T, name string) error {
+	return initializations.DB.First(t, "name = ?", name).Error
+}
+
+func FindByCode[T any](t *T, code string) error {
+	return initializations.DB.First(t, "code = ?", code).Error
+}
+
 func FindAll[T any](t *T) error {
 	return initializations.DB.Find(t).Error
 }
