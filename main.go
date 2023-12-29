@@ -1,9 +1,9 @@
 package main
 
 import (
-	"gin-admin-template/controllers"
-	"gin-admin-template/initializations"
-	"gin-admin-template/routers"
+	"gin-admin-template/internal/api"
+	"gin-admin-template/internal/config"
+	"gin-admin-template/internal/router"
 	"github.com/gin-gonic/gin"
 	"os"
 	"strconv"
@@ -11,13 +11,13 @@ import (
 
 func main() {
 	gin.SetMode(gin.ReleaseMode)
-	router := gin.Default()
-	routers.SetApiRouter(router)
-	routers.SetOtherRouter(router)
+	r := gin.Default()
+	router.SetApiRouter(r)
+	router.SetOtherRouter(r)
 
 	dir, _ := os.Getwd()
-	router.Static("/assets", dir+"/web/dist/assets")
-	router.GET("/", controllers.HtmlHandler)
+	r.Static("/assets", dir+"/web/dist/assets")
+	r.GET("/", api.HtmlHandler)
 
-	router.Run(":" + strconv.Itoa(initializations.AppConfig.Server.Port))
+	r.Run(":" + strconv.Itoa(config.AppConfig.Server.Port))
 }

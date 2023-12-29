@@ -1,5 +1,13 @@
 # Gin template
+gin + gorm 项目模版
 
+## 功能清单
+* [ ] 机构
+* [ ] 菜单
+* [ ] 角色
+* [ ] 用户
+
+## 配置文件
 config.yml
 
 ```yaml
