@@ -10,7 +10,8 @@ func SetApiRouter(router *gin.Engine) {
 	// login
 	loginRouter := router.Group("/login")
 	loginRouter.Use(middleware.CORS(), middleware.Limit(1))
-	loginRouter.POST("/", api.Login)
+	loginRouter.POST("/account", api.Login)
+	loginRouter.POST("/captcha", api.Captcha)
 	// user
 	usersRouter := router.Group("/users")
 	usersRouter.Use(middleware.CORS())
