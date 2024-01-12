@@ -11,9 +11,9 @@ require (
 	github.com/go-playground/validator/v10 v10.14.0
 	github.com/golang-jwt/jwt/v5 v5.0.0
 	github.com/google/uuid v1.4.0
+	github.com/mojocn/base64Captcha v1.3.6
 	github.com/redis/go-redis/v9 v9.3.0
 	github.com/spf13/viper v1.17.0
-	github.com/wenlng/go-captcha v1.2.5
 	golang.org/x/crypto v0.13.0
 	gorm.io/driver/mysql v1.5.2
 	gorm.io/gorm v1.25.5

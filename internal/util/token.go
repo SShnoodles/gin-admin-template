@@ -19,8 +19,11 @@ func ValidateUserToken(tokenString string, signSey string) (*jwt.RegisteredClaim
 	token, err := jwt.ParseWithClaims(tokenString, &registeredClaims, func(token *jwt.Token) (interface{}, error) {
 		return []byte(signSey), nil
 	})
-	if err != nil && !token.Valid {
+	if err != nil {
 		return nil, err
+	}
+	if !token.Valid {
+		return nil, errors.New("token invalid")
 	}
 	return &registeredClaims, nil
 }

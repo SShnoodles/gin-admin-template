@@ -2,15 +2,13 @@ package api
 
 import (
 	"context"
-	"gin-admin-template/internal/config"
 	"gin-admin-template/internal/domain"
 	"gin-admin-template/internal/middleware"
 	"gin-admin-template/internal/service"
 	"gin-admin-template/internal/util"
 	"github.com/gin-gonic/gin"
-	"github.com/wenlng/go-captcha/captcha"
+	"github.com/mojocn/base64Captcha"
 	"net/http"
-	"time"
 )
 
 type LoginInfo struct {
@@ -35,15 +33,7 @@ func Login(c *gin.Context) {
 		return
 	}
 	// check code
-	val, err := config.RDB.Get(ctx, "code:"+login.CodeId).Result()
-	if err != nil {
-		c.String(http.StatusBadRequest, "验证码错误")
-		return
-	}
-	defer func() {
-		config.RDB.Del(ctx, "code:"+login.CodeId)
-	}()
-	if login.Code != val {
+	if !base64Captcha.DefaultMemStore.Verify(login.CodeId, login.Code, true) {
 		c.String(http.StatusUnauthorized, "验证码错误")
 		return
 	}
@@ -66,15 +56,15 @@ func Login(c *gin.Context) {
 }
 
 func Captcha(c *gin.Context) {
-	capt := captcha.GetCaptcha()
-	dots, _, tb64, key, err := capt.Generate()
+	driver := base64Captcha.NewDriverDigit(80, 240, 4, 0.7, 80)
+	captcha := base64Captcha.NewCaptcha(driver, base64Captcha.DefaultMemStore)
+	id, b64s, _, err := captcha.Generate()
 	if err != nil {
-		c.String(http.StatusUnauthorized, "验证码生成失败")
+		c.String(http.StatusUnauthorized, "创建验证码失败")
 		return
 	}
-	config.RDB.Set(ctx, key, dots, time.Minute*5)
 	var result = make(map[string]string)
-	result["codeId"] = key
-	result["code"] = tb64
+	result["codeId"] = id
+	result["code"] = b64s
 	c.JSON(http.StatusOK, result)
 }

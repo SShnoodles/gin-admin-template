@@ -19,7 +19,7 @@ func Limit(timesMax int) gin.HandlerFunc {
 		}
 		timesStr, _ := config.RDB.Get(config.CTX, ip).Result()
 		if timesStr == "" {
-			config.RDB.Set(context.Background(), ip, 1, time.Minute)
+			config.RDB.Set(context.Background(), ip, 1, time.Second)
 			return
 		}
 		times, _ := strconv.Atoi(timesStr)
@@ -28,6 +28,6 @@ func Limit(timesMax int) gin.HandlerFunc {
 			c.Abort()
 			return
 		}
-		config.RDB.Set(context.Background(), ip, times+1, time.Minute)
+		config.RDB.Set(context.Background(), ip, times+1, time.Second)
 	}
 }
