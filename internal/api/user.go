@@ -4,6 +4,7 @@ import (
 	"gin-admin-template/internal/config"
 	"gin-admin-template/internal/domain"
 	"gin-admin-template/internal/service"
+	"gin-admin-template/internal/util"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 	"net/http"
@@ -51,30 +52,39 @@ func CreateUser(c *gin.Context) {
 		c.String(http.StatusBadRequest, "参数错误")
 		return
 	}
+	user, _ := service.FindUserByUsername(userAdd.Username)
+	if user != (domain.User{}) {
+		c.String(http.StatusBadRequest, "用户已存在")
+		return
+	}
+
 	userId := config.IdGenerate()
 	err = config.DB.Transaction(func(tx *gorm.DB) error {
+		password, _ := util.EncryptedPassword(userAdd.Password)
 		user := domain.User{
 			Id:       userId,
 			Username: userAdd.Username,
 			RealName: userAdd.RealName,
 			WorkNo:   userAdd.WorkNo,
-			Password: userAdd.Password,
+			Password: password,
 			OrgId:    userAdd.OrgId,
 		}
 		if err = tx.Create(&user).Error; err != nil {
 			return err
 		}
-		var urr []domain.UserRoleRelation
-		for _, id := range userAdd.RoleIds {
-			urr = append(urr, domain.UserRoleRelation{
-				Id:     config.IdGenerate(),
-				UserId: userId,
-				RoleId: id,
-				OrgId:  userAdd.OrgId,
-			})
-		}
-		if err = tx.Create(&urr).Error; err != nil {
-			return err
+		if userAdd.RoleIds != nil {
+			var urr []domain.UserRoleRelation
+			for _, id := range userAdd.RoleIds {
+				urr = append(urr, domain.UserRoleRelation{
+					Id:     config.IdGenerate(),
+					UserId: userId,
+					RoleId: id,
+					OrgId:  userAdd.OrgId,
+				})
+			}
+			if err = tx.Create(&urr).Error; err != nil {
+				return err
+			}
 		}
 		return nil
 	})

@@ -9,6 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/mojocn/base64Captcha"
 	"net/http"
+	"time"
 )
 
 type LoginInfo struct {
@@ -16,6 +17,12 @@ type LoginInfo struct {
 	Password string `json:"password" validate:"required"`
 	CodeId   string `json:"codeId" validate:"required"`
 	Code     string `json:"code" validate:"required"`
+}
+
+type LoginResult struct {
+	AccessToken  string    `json:"accessToken"`
+	Expires      time.Time `json:"expires"`
+	RefreshToken string    `json:"refreshToken"`
 }
 
 var ctx = context.Background()
@@ -49,10 +56,12 @@ func Login(c *gin.Context) {
 		return
 	}
 	// create jwt
-	jwt, err := util.GenerateToken(user.Id)
-	var token = make(map[string]string)
-	token["token"] = "Bearer " + jwt
-	c.JSON(http.StatusOK, jwt)
+	jwt, expiresAt, err := util.GenerateToken(user.Id)
+	result := LoginResult{
+		AccessToken: "Bearer " + jwt,
+		Expires:     expiresAt,
+	}
+	c.JSON(http.StatusOK, result)
 }
 
 func Captcha(c *gin.Context) {

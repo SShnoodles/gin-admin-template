@@ -12,7 +12,7 @@ import (
 
 func ValidateUserToken(tokenString string, signSey string) (*jwt.RegisteredClaims, error) {
 	if tokenString == "" {
-		return nil, errors.New("Token is empty!")
+		return nil, errors.New("token is empty")
 	}
 	tokenString = strings.ReplaceAll(tokenString, "Bearer ", "")
 	registeredClaims := jwt.RegisteredClaims{}
@@ -28,12 +28,13 @@ func ValidateUserToken(tokenString string, signSey string) (*jwt.RegisteredClaim
 	return &registeredClaims, nil
 }
 
-func GenerateToken(subject int64) (string, error) {
+func GenerateToken(subject int64) (string, time.Time, error) {
 	registeredClaims := jwt.RegisteredClaims{
 		ID:        uuid.New().String(),
 		Subject:   strconv.FormatInt(subject, 10),
 		ExpiresAt: jwt.NewNumericDate(time.Now().AddDate(0, 0, 7)),
 		Issuer:    "gin",
 	}
-	return jwt.NewWithClaims(jwt.SigningMethodHS256, registeredClaims).SignedString([]byte(config.AppConfig.Jwt.Secret))
+	token, err := jwt.NewWithClaims(jwt.SigningMethodHS256, registeredClaims).SignedString([]byte(config.AppConfig.Jwt.Secret))
+	return token, registeredClaims.ExpiresAt.Time, err
 }
