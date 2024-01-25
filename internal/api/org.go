@@ -50,6 +50,12 @@ func CreateOrg(c *gin.Context) {
 		c.String(http.StatusBadRequest, "参数错误")
 		return
 	}
+	org, _ := service.FindOrgByName(orgAdd.Name)
+	if org != (domain.Org{}) {
+		c.String(http.StatusBadRequest, "名称已存在")
+		return
+	}
+
 	orgId := config.IdGenerate()
 	err = config.DB.Transaction(func(tx *gorm.DB) error {
 		org := domain.Org{
@@ -61,16 +67,18 @@ func CreateOrg(c *gin.Context) {
 		if err = tx.Create(&org).Error; err != nil {
 			return err
 		}
-		var omr []domain.OrgMenuRelation
-		for _, id := range orgAdd.MenuIds {
-			omr = append(omr, domain.OrgMenuRelation{
-				Id:     config.IdGenerate(),
-				OrgId:  orgId,
-				MenuId: id,
-			})
-		}
-		if err = tx.Create(&omr).Error; err != nil {
-			return err
+		if orgAdd.MenuIds != nil {
+			var omr []domain.OrgMenuRelation
+			for _, id := range orgAdd.MenuIds {
+				omr = append(omr, domain.OrgMenuRelation{
+					Id:     config.IdGenerate(),
+					OrgId:  orgId,
+					MenuId: id,
+				})
+			}
+			if err = tx.Create(&omr).Error; err != nil {
+				return err
+			}
 		}
 		return nil
 	})
@@ -120,16 +128,18 @@ func UpdateOrg(c *gin.Context) {
 				return err
 			}
 		}
-		var omr []domain.OrgMenuRelation
-		for _, id := range orgAdd.MenuIds {
-			omr = append(omr, domain.OrgMenuRelation{
-				Id:     config.IdGenerate(),
-				OrgId:  orgId,
-				MenuId: id,
-			})
-		}
-		if err = config.DB.Create(&omr).Error; err != nil {
-			return err
+		if orgAdd.MenuIds != nil {
+			var omr []domain.OrgMenuRelation
+			for _, id := range orgAdd.MenuIds {
+				omr = append(omr, domain.OrgMenuRelation{
+					Id:     config.IdGenerate(),
+					OrgId:  orgId,
+					MenuId: id,
+				})
+			}
+			if err = config.DB.Create(&omr).Error; err != nil {
+				return err
+			}
 		}
 		return nil
 	})

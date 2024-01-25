@@ -3,7 +3,7 @@ package domain
 import "time"
 
 type Menu struct {
-	Id        int64     `json:"id" gorm:"primaryKey;autoIncrement:false"`
+	Id        int64     `json:"id,string" gorm:"primaryKey;autoIncrement:false"`
 	Pid       *int64    `json:"pid"`
 	Name      string    `json:"name" gorm:"not null;size:50"`
 	Path      string    `json:"path" gorm:"not null;size:200"`

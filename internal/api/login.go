@@ -58,7 +58,7 @@ func Login(c *gin.Context) {
 	// create jwt
 	jwt, expiresAt, err := util.GenerateToken(user.Id)
 	result := LoginResult{
-		AccessToken: "Bearer " + jwt,
+		AccessToken: jwt,
 		Expires:     expiresAt,
 	}
 	c.JSON(http.StatusOK, result)
