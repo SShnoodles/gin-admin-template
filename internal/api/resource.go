@@ -21,8 +21,7 @@ func GetResources(c *gin.Context) {
 		c.String(http.StatusBadRequest, "参数错误")
 		return
 	}
-	var resource []domain.Resource
-	page := service.Pagination(config.DB, q.PageIndex, q.PageSize, &resource)
+	page := service.Pagination(config.DB, q.PageIndex, q.PageSize, []domain.Resource{})
 	c.JSON(http.StatusOK, page)
 }
 

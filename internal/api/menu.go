@@ -13,6 +13,10 @@ type MenuQuery struct {
 	service.PageInfo
 	Name string `form:"name"`
 }
+type MenuTree struct {
+	domain.Menu
+	Children []domain.Menu `json:"children"`
+}
 
 func GetMenus(c *gin.Context) {
 	var q MenuQuery
@@ -21,9 +25,12 @@ func GetMenus(c *gin.Context) {
 		c.String(http.StatusBadRequest, "参数错误")
 		return
 	}
-	var menus []domain.Menu
-	page := service.Pagination(config.DB, q.PageIndex, q.PageSize, &menus)
-	c.JSON(http.StatusOK, page)
+	menus, err := service.FindRootMenu()
+	var m []MenuTree
+	for _, menu := range menus {
+		// TODO
+	}
+	c.JSON(http.StatusOK, m)
 }
 
 func GetMenu(c *gin.Context) {
@@ -44,6 +51,11 @@ func CreateMenu(c *gin.Context) {
 		c.String(http.StatusBadRequest, "参数错误")
 		return
 	}
+	_, err = service.FindMenuByPath(menu.Path)
+	if err == nil {
+		c.String(http.StatusBadRequest, "路径已存在")
+		return
+	}
 	menu.Id = config.IdGenerate()
 	err = service.Insert(&menu)
 	if err != nil {
@@ -62,6 +74,20 @@ func UpdateMenu(c *gin.Context) {
 		return
 	}
 	menu.Id = int64(id)
+	var oldMenu domain.Menu
+	err = service.FindById(&oldMenu, menu.Id)
+	if err != nil {
+		c.String(http.StatusBadRequest, "机构不存在")
+		return
+	}
+	if menu.Path != oldMenu.Path {
+		_, err = service.FindMenuByPath(menu.Path)
+		if err == nil {
+			c.String(http.StatusBadRequest, "路径已存在")
+			return
+		}
+	}
+
 	err = service.Update(&menu)
 	if err != nil {
 		c.String(http.StatusBadRequest, "更新失败")

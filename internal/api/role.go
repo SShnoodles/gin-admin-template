@@ -27,8 +27,7 @@ func GetRoles(c *gin.Context) {
 		c.String(http.StatusBadRequest, "参数错误")
 		return
 	}
-	var roles []domain.Role
-	page := service.Pagination(config.DB, q.PageIndex, q.PageSize, &roles)
+	page := service.Pagination(config.DB, q.PageIndex, q.PageSize, []domain.Role{})
 	c.JSON(http.StatusOK, page)
 }
 

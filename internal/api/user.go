@@ -29,8 +29,7 @@ func GetUsers(c *gin.Context) {
 		c.String(http.StatusBadRequest, "参数错误")
 		return
 	}
-	var users []domain.User
-	page := service.Pagination(config.DB, q.PageIndex, q.PageSize, &users)
+	page := service.Pagination(config.DB, q.PageIndex, q.PageSize, []domain.User{})
 	c.JSON(http.StatusOK, page)
 }
 

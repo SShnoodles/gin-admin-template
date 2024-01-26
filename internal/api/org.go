@@ -27,8 +27,7 @@ func GetOrgs(c *gin.Context) {
 		c.String(http.StatusBadRequest, "参数错误")
 		return
 	}
-	var orgs []domain.Org
-	page := service.Pagination(config.DB, q.PageIndex, q.PageSize, &orgs)
+	page := service.Pagination(config.DB, q.PageIndex, q.PageSize, []domain.Org{})
 	c.JSON(http.StatusOK, page)
 }
 
@@ -50,8 +49,9 @@ func CreateOrg(c *gin.Context) {
 		c.String(http.StatusBadRequest, "参数错误")
 		return
 	}
-	org, _ := service.FindOrgByName(orgAdd.Name)
-	if org != (domain.Org{}) {
+	var org domain.Org
+	err = service.FindByName(&org, orgAdd.Name)
+	if err == nil {
 		c.String(http.StatusBadRequest, "名称已存在")
 		return
 	}
