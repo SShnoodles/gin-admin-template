@@ -5,6 +5,7 @@ import (
 	"gin-admin-template/internal/domain"
 	"gin-admin-template/internal/service"
 	"github.com/gin-gonic/gin"
+	"github.com/jinzhu/copier"
 	"net/http"
 	"strconv"
 )
@@ -25,16 +26,24 @@ func GetMenus(c *gin.Context) {
 		c.String(http.StatusBadRequest, "参数错误")
 		return
 	}
-	menus, err := service.FindRootMenu()
-	var m []MenuTree
+	menus, err := service.FindRootMenus()
+	var tree []MenuTree
 	for _, menu := range menus {
-		// TODO
+		var mt MenuTree
+		copier.Copy(&mt, &menu)
+		childs, _ := service.FindMenusByPid(menu.Id)
+		mt.Children = childs
+		tree = append(tree, mt)
 	}
-	c.JSON(http.StatusOK, m)
+	c.JSON(http.StatusOK, tree)
 }
 
 func GetMenu(c *gin.Context) {
-	id, err := strconv.Atoi(c.Param("id"))
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		c.String(http.StatusBadRequest, "参数不正确")
+		return
+	}
 	var menu domain.Menu
 	err = service.FindById(&menu, int64(id))
 	if err != nil {
@@ -66,14 +75,18 @@ func CreateMenu(c *gin.Context) {
 }
 
 func UpdateMenu(c *gin.Context) {
-	id, err := strconv.Atoi(c.Param("id"))
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		c.String(http.StatusBadRequest, "参数不正确")
+		return
+	}
 	var menu domain.Menu
 	err = c.ShouldBindJSON(&menu)
 	if err != nil {
 		c.String(http.StatusBadRequest, "参数错误")
 		return
 	}
-	menu.Id = int64(id)
+	menu.Id = id
 	var oldMenu domain.Menu
 	err = service.FindById(&oldMenu, menu.Id)
 	if err != nil {
@@ -97,8 +110,17 @@ func UpdateMenu(c *gin.Context) {
 }
 
 func DeleteMenu(c *gin.Context) {
-	id, err := strconv.Atoi(c.Param("id"))
-	err = service.DeleteById(domain.Menu{}, int64(id))
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		c.String(http.StatusBadRequest, "参数不正确")
+		return
+	}
+	err = service.DeleteById(domain.Menu{}, id)
+	if err != nil {
+		c.String(http.StatusBadRequest, "删除失败")
+		return
+	}
+	err = service.DeleteMenusByPid(id)
 	if err != nil {
 		c.String(http.StatusBadRequest, "删除失败")
 		return

@@ -6,6 +6,7 @@ import (
 	"gin-admin-template/internal/service"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
+	"log"
 	"net/http"
 	"strconv"
 )
@@ -17,7 +18,7 @@ type OrgQuery struct {
 
 type OrgAdd struct {
 	domain.Org
-	MenuIds []int64 `json:"menuIds"`
+	MenuIds []string `json:"menuIds,omitempty"`
 }
 
 func GetOrgs(c *gin.Context) {
@@ -32,9 +33,13 @@ func GetOrgs(c *gin.Context) {
 }
 
 func GetOrg(c *gin.Context) {
-	id, err := strconv.Atoi(c.Param("id"))
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		c.String(http.StatusBadRequest, "参数不正确")
+		return
+	}
 	var org domain.Org
-	err = service.FindById(&org, int64(id))
+	err = service.FindById(&org, id)
 	if err != nil {
 		c.String(http.StatusBadRequest, "查询失败")
 		return
@@ -46,6 +51,7 @@ func CreateOrg(c *gin.Context) {
 	var orgAdd OrgAdd
 	err := c.ShouldBindJSON(&orgAdd)
 	if err != nil {
+		log.Println(err)
 		c.String(http.StatusBadRequest, "参数错误")
 		return
 	}
@@ -70,10 +76,11 @@ func CreateOrg(c *gin.Context) {
 		if orgAdd.MenuIds != nil {
 			var omr []domain.OrgMenuRelation
 			for _, id := range orgAdd.MenuIds {
+				menuId, _ := strconv.ParseInt(id, 10, 64)
 				omr = append(omr, domain.OrgMenuRelation{
 					Id:     config.IdGenerate(),
 					OrgId:  orgId,
-					MenuId: id,
+					MenuId: menuId,
 				})
 			}
 			if err = tx.Create(&omr).Error; err != nil {
@@ -90,14 +97,17 @@ func CreateOrg(c *gin.Context) {
 }
 
 func UpdateOrg(c *gin.Context) {
-	id, err := strconv.Atoi(c.Param("id"))
+	orgId, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		c.String(http.StatusBadRequest, "参数不正确")
+		return
+	}
 	var orgAdd OrgAdd
 	err = c.ShouldBindJSON(&orgAdd)
 	if err != nil {
 		c.String(http.StatusBadRequest, "参数错误")
 		return
 	}
-	orgId := int64(id)
 	var org domain.Org
 	err = service.FindById(&org, orgId)
 	if err != nil {
@@ -131,10 +141,11 @@ func UpdateOrg(c *gin.Context) {
 		if orgAdd.MenuIds != nil {
 			var omr []domain.OrgMenuRelation
 			for _, id := range orgAdd.MenuIds {
+				menuId, _ := strconv.ParseInt(id, 10, 64)
 				omr = append(omr, domain.OrgMenuRelation{
 					Id:     config.IdGenerate(),
 					OrgId:  orgId,
-					MenuId: id,
+					MenuId: menuId,
 				})
 			}
 			if err = config.DB.Create(&omr).Error; err != nil {
@@ -152,9 +163,13 @@ func UpdateOrg(c *gin.Context) {
 }
 
 func DeleteOrg(c *gin.Context) {
-	id, err := strconv.Atoi(c.Param("id"))
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		c.String(http.StatusBadRequest, "参数不正确")
+		return
+	}
 	var org domain.Org
-	err = service.FindById(&org, int64(id))
+	err = service.FindById(&org, id)
 	if err != nil {
 		c.String(http.StatusBadRequest, "数据不存在")
 		return

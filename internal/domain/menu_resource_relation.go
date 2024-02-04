@@ -4,8 +4,8 @@ import "time"
 
 type MenuResourceRelation struct {
 	Id         int64     `json:"id,string" gorm:"primaryKey;autoIncrement:false"`
-	MenuId     int64     `json:"menuId"`
-	ResourceId int64     `json:"resourceId"`
+	MenuId     int64     `json:"menuId,string"`
+	ResourceId int64     `json:"resourceId,string"`
 	CreatedAt  time.Time `json:"createdAt"`
 }
 

@@ -26,9 +26,13 @@ func GetResources(c *gin.Context) {
 }
 
 func GetResource(c *gin.Context) {
-	id, err := strconv.Atoi(c.Param("id"))
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		c.String(http.StatusBadRequest, "参数不正确")
+		return
+	}
 	var resource domain.Resource
-	err = service.FindById(&resource, int64(id))
+	err = service.FindById(&resource, id)
 	if err != nil {
 		c.String(http.StatusBadRequest, "查询失败")
 		return
@@ -53,14 +57,18 @@ func CreateResource(c *gin.Context) {
 }
 
 func UpdateResource(c *gin.Context) {
-	id, err := strconv.Atoi(c.Param("id"))
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		c.String(http.StatusBadRequest, "参数不正确")
+		return
+	}
 	var resource domain.Resource
 	err = c.ShouldBindJSON(&resource)
 	if err != nil {
 		c.String(http.StatusBadRequest, "参数错误")
 		return
 	}
-	resource.Id = int64(id)
+	resource.Id = id
 	err = service.Update(&resource)
 	if err != nil {
 		c.String(http.StatusBadRequest, "更新失败")
@@ -70,8 +78,12 @@ func UpdateResource(c *gin.Context) {
 }
 
 func DeleteResource(c *gin.Context) {
-	id, err := strconv.Atoi(c.Param("id"))
-	err = service.DeleteById(domain.Resource{}, int64(id))
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		c.String(http.StatusBadRequest, "参数不正确")
+		return
+	}
+	err = service.DeleteById(domain.Resource{}, id)
 	if err != nil {
 		c.String(http.StatusBadRequest, "删除失败")
 		return

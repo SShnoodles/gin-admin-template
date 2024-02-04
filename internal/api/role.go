@@ -17,7 +17,7 @@ type RoleQuery struct {
 
 type RoleAdd struct {
 	domain.Role
-	MenuIds []int64 `json:"menuIds"`
+	MenuIds []string `json:"menuIds,omitempty"`
 }
 
 func GetRoles(c *gin.Context) {
@@ -32,9 +32,13 @@ func GetRoles(c *gin.Context) {
 }
 
 func GetRole(c *gin.Context) {
-	id, err := strconv.Atoi(c.Param("id"))
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		c.String(http.StatusBadRequest, "参数不正确")
+		return
+	}
 	var role domain.Role
-	err = service.FindById(&role, int64(id))
+	err = service.FindById(&role, id)
 	if err != nil {
 		c.String(http.StatusBadRequest, "查询失败")
 		return
@@ -62,10 +66,11 @@ func CreateRole(c *gin.Context) {
 		}
 		var rmr []domain.RoleMenuRelation
 		for _, id := range roleAdd.MenuIds {
+			menuId, _ := strconv.ParseInt(id, 10, 64)
 			rmr = append(rmr, domain.RoleMenuRelation{
 				Id:     config.IdGenerate(),
 				RoleId: roleId,
-				MenuId: id,
+				MenuId: menuId,
 			})
 		}
 		if err = tx.Create(&rmr).Error; err != nil {
@@ -81,14 +86,17 @@ func CreateRole(c *gin.Context) {
 }
 
 func UpdateRole(c *gin.Context) {
-	id, err := strconv.Atoi(c.Param("id"))
+	roleId, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		c.String(http.StatusBadRequest, "参数不正确")
+		return
+	}
 	var roleAdd RoleAdd
 	err = c.ShouldBindJSON(&roleAdd)
 	if err != nil {
 		c.String(http.StatusBadRequest, "参数错误")
 		return
 	}
-	roleId := int64(id)
 	var role domain.Role
 	err = service.FindById(&role, roleId)
 	if err != nil {
@@ -121,10 +129,11 @@ func UpdateRole(c *gin.Context) {
 		}
 		var rmr []domain.RoleMenuRelation
 		for _, id := range roleAdd.MenuIds {
+			menuId, _ := strconv.ParseInt(id, 10, 64)
 			rmr = append(rmr, domain.RoleMenuRelation{
 				Id:     config.IdGenerate(),
 				RoleId: roleId,
-				MenuId: id,
+				MenuId: menuId,
 			})
 		}
 		if err = config.DB.Create(&rmr).Error; err != nil {
@@ -140,9 +149,13 @@ func UpdateRole(c *gin.Context) {
 }
 
 func DeleteRole(c *gin.Context) {
-	id, err := strconv.Atoi(c.Param("id"))
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		c.String(http.StatusBadRequest, "参数不正确")
+		return
+	}
 	var role domain.Role
-	err = service.FindById(&role, int64(id))
+	err = service.FindById(&role, id)
 	if err != nil {
 		c.String(http.StatusBadRequest, "数据不存在")
 		return

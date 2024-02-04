@@ -19,7 +19,7 @@ type UserQuery struct {
 
 type UserAdd struct {
 	domain.User
-	RoleIds []int64 `json:"roleIds"`
+	RoleIds []string `json:"roleIds,omitempty"`
 }
 
 func GetUsers(c *gin.Context) {
@@ -34,9 +34,13 @@ func GetUsers(c *gin.Context) {
 }
 
 func GetUser(c *gin.Context) {
-	id, err := strconv.Atoi(c.Param("id"))
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		c.String(http.StatusBadRequest, "参数不正确")
+		return
+	}
 	var user domain.User
-	err = service.FindById(&user, int64(id))
+	err = service.FindById(&user, id)
 	if err != nil {
 		c.String(http.StatusBadRequest, "查询失败")
 		return
@@ -74,10 +78,11 @@ func CreateUser(c *gin.Context) {
 		if userAdd.RoleIds != nil {
 			var urr []domain.UserRoleRelation
 			for _, id := range userAdd.RoleIds {
+				roleId, _ := strconv.ParseInt(id, 10, 64)
 				urr = append(urr, domain.UserRoleRelation{
 					Id:     config.IdGenerate(),
 					UserId: userId,
-					RoleId: id,
+					RoleId: roleId,
 					OrgId:  userAdd.OrgId,
 				})
 			}
@@ -95,14 +100,17 @@ func CreateUser(c *gin.Context) {
 }
 
 func UpdateUser(c *gin.Context) {
-	id, err := strconv.Atoi(c.Param("id"))
+	userId, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		c.String(http.StatusBadRequest, "参数不正确")
+		return
+	}
 	var userAdd UserAdd
 	err = c.ShouldBindJSON(&userAdd)
 	if err != nil {
 		c.String(http.StatusBadRequest, "参数错误")
 		return
 	}
-	userId := int64(id)
 	var user domain.User
 	err = service.FindById(&user, userId)
 	if err != nil {
@@ -137,10 +145,11 @@ func UpdateUser(c *gin.Context) {
 
 		var urr []domain.UserRoleRelation
 		for _, id := range userAdd.RoleIds {
+			roleId, _ := strconv.ParseInt(id, 10, 64)
 			urr = append(urr, domain.UserRoleRelation{
 				Id:     config.IdGenerate(),
 				UserId: userId,
-				RoleId: id,
+				RoleId: roleId,
 				OrgId:  userAdd.OrgId,
 			})
 		}
@@ -157,10 +166,14 @@ func UpdateUser(c *gin.Context) {
 }
 
 func DeleteUser(c *gin.Context) {
-	id, err := strconv.Atoi(c.Param("id"))
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		c.String(http.StatusBadRequest, "参数不正确")
+		return
+	}
 
 	var user domain.User
-	err = service.FindById(&user, int64(id))
+	err = service.FindById(&user, id)
 	if err != nil {
 		c.String(http.StatusBadRequest, "数据不存在")
 		return
