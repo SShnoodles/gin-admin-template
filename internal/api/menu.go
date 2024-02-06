@@ -38,6 +38,10 @@ func GetMenus(c *gin.Context) {
 	c.JSON(http.StatusOK, tree)
 }
 
+func menus(tree *[]MenuTree) {
+	// TODO
+}
+
 func GetMenu(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
@@ -45,7 +49,7 @@ func GetMenu(c *gin.Context) {
 		return
 	}
 	var menu domain.Menu
-	err = service.FindById(&menu, int64(id))
+	err = service.FindById(&menu, id)
 	if err != nil {
 		c.String(http.StatusBadRequest, "查询失败")
 		return

@@ -136,7 +136,7 @@ func UpdateRole(c *gin.Context) {
 				MenuId: menuId,
 			})
 		}
-		if err = config.DB.Create(&rmr).Error; err != nil {
+		if err = tx.Create(&rmr).Error; err != nil {
 			return err
 		}
 		return nil

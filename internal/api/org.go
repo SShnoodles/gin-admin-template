@@ -47,6 +47,20 @@ func GetOrg(c *gin.Context) {
 	c.JSON(http.StatusOK, org)
 }
 
+func GetOrgMenus(c *gin.Context) {
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		c.String(http.StatusBadRequest, "参数不正确")
+		return
+	}
+	menusIds, err := service.FindMenuIdsByOrgId(id)
+	if err != nil {
+		c.String(http.StatusBadRequest, "查询失败")
+		return
+	}
+	c.JSON(http.StatusOK, menusIds)
+}
+
 func CreateOrg(c *gin.Context) {
 	var orgAdd OrgAdd
 	err := c.ShouldBindJSON(&orgAdd)
@@ -148,7 +162,7 @@ func UpdateOrg(c *gin.Context) {
 					MenuId: menuId,
 				})
 			}
-			if err = config.DB.Create(&omr).Error; err != nil {
+			if err = tx.Create(&omr).Error; err != nil {
 				return err
 			}
 		}
