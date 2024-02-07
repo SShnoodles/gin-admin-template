@@ -14,15 +14,6 @@ func FindMenuByPath(path string) (domain.Menu, error) {
 	return menu, nil
 }
 
-func FindRootMenus() ([]domain.Menu, error) {
-	var menu []domain.Menu
-	err := config.DB.Find(&menu, "pid is null or pid = ''").Error
-	if err != nil {
-		return menu, err
-	}
-	return menu, nil
-}
-
 func FindMenusByPid(pid int64) ([]domain.Menu, error) {
 	var menu []domain.Menu
 	err := config.DB.Find(&menu, "pid = ?", pid).Error

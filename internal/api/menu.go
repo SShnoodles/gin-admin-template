@@ -16,7 +16,7 @@ type MenuQuery struct {
 }
 type MenuTree struct {
 	domain.Menu
-	Children []domain.Menu `json:"children"`
+	Children []*MenuTree `json:"children"`
 }
 
 func GetMenus(c *gin.Context) {
@@ -26,20 +26,31 @@ func GetMenus(c *gin.Context) {
 		c.String(http.StatusBadRequest, "参数错误")
 		return
 	}
-	menus, err := service.FindRootMenus()
-	var tree []MenuTree
+	var menus []domain.Menu
+	err = service.FindAll(&menus)
+	if err != nil {
+		c.String(http.StatusBadRequest, "查询失败")
+		return
+	}
+	var menuTree []*MenuTree
 	for _, menu := range menus {
 		var mt MenuTree
-		copier.Copy(&mt, &menu)
-		childs, _ := service.FindMenusByPid(menu.Id)
-		mt.Children = childs
-		tree = append(tree, mt)
+		copier.Copy(&mt, menu)
+		menuTree = append(menuTree, &mt)
 	}
+	tree := buildTree(menuTree, 0)
 	c.JSON(http.StatusOK, tree)
 }
 
-func menus(tree *[]MenuTree) {
-	// TODO
+func buildTree(menuTree []*MenuTree, pid int64) []*MenuTree {
+	var children []*MenuTree
+	for _, menu := range menuTree {
+		if menu.Pid == pid {
+			menu.Children = buildTree(menuTree, menu.Id)
+			children = append(children, menu)
+		}
+	}
+	return children
 }
 
 func GetMenu(c *gin.Context) {
