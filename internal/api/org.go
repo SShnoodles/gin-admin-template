@@ -28,6 +28,16 @@ func GetOrgs(c *gin.Context) {
 		c.String(http.StatusBadRequest, "参数错误")
 		return
 	}
+	if q.PageSize == 0 {
+		var orgs []domain.Org
+		err := service.FindAll(&orgs)
+		if err != nil {
+			c.String(http.StatusBadRequest, "查询失败")
+			return
+		}
+		c.JSON(http.StatusOK, orgs)
+		return
+	}
 	page := service.Pagination(config.DB, q.PageIndex, q.PageSize, []domain.Org{})
 	c.JSON(http.StatusOK, page)
 }

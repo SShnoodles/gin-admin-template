@@ -42,6 +42,7 @@ func SetApiRouter(router *gin.Engine) {
 		roleRouter.POST("", api.CreateRole)
 		roleRouter.PUT(":id", api.UpdateRole)
 		roleRouter.DELETE(":id", api.DeleteRole)
+		roleRouter.GET(":id/menus", api.GetRoleMenus)
 	}
 	// menu
 	menuRouter := router.Group("menus")

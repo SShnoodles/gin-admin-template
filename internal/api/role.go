@@ -5,6 +5,7 @@ import (
 	"gin-admin-template/internal/domain"
 	"gin-admin-template/internal/service"
 	"github.com/gin-gonic/gin"
+	"github.com/jinzhu/copier"
 	"gorm.io/gorm"
 	"net/http"
 	"strconv"
@@ -20,6 +21,11 @@ type RoleAdd struct {
 	MenuIds []string `json:"menuIds,omitempty"`
 }
 
+type RoleOrg struct {
+	domain.Role
+	OrgName string `json:"orgName"`
+}
+
 func GetRoles(c *gin.Context) {
 	var q RoleQuery
 	err := c.ShouldBindQuery(&q)
@@ -28,7 +34,20 @@ func GetRoles(c *gin.Context) {
 		return
 	}
 	page := service.Pagination(config.DB, q.PageIndex, q.PageSize, []domain.Role{})
-	c.JSON(http.StatusOK, page)
+	result := service.PagedResult[RoleOrg]{
+		Total: page.Total,
+	}
+	for _, d := range page.Data {
+		var org domain.Org
+		err := service.FindById(&org, d.OrgId)
+		if err == nil {
+			var roleOrg RoleOrg
+			copier.Copy(&roleOrg, &d)
+			roleOrg.OrgName = org.Name
+			result.Data = append(result.Data, roleOrg)
+		}
+	}
+	c.JSON(http.StatusOK, result)
 }
 
 func GetRole(c *gin.Context) {
@@ -44,6 +63,20 @@ func GetRole(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, role)
+}
+
+func GetRoleMenus(c *gin.Context) {
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		c.String(http.StatusBadRequest, "参数不正确")
+		return
+	}
+	menusIds, err := service.FindMenuIdsByRoleId(id)
+	if err != nil {
+		c.String(http.StatusBadRequest, "查询失败")
+		return
+	}
+	c.JSON(http.StatusOK, menusIds)
 }
 
 func CreateRole(c *gin.Context) {
@@ -64,17 +97,19 @@ func CreateRole(c *gin.Context) {
 		if err = tx.Create(&role).Error; err != nil {
 			return err
 		}
-		var rmr []domain.RoleMenuRelation
-		for _, id := range roleAdd.MenuIds {
-			menuId, _ := strconv.ParseInt(id, 10, 64)
-			rmr = append(rmr, domain.RoleMenuRelation{
-				Id:     config.IdGenerate(),
-				RoleId: roleId,
-				MenuId: menuId,
-			})
-		}
-		if err = tx.Create(&rmr).Error; err != nil {
-			return err
+		if len(roleAdd.MenuIds) > 0 {
+			var rmr []domain.RoleMenuRelation
+			for _, id := range roleAdd.MenuIds {
+				menuId, _ := strconv.ParseInt(id, 10, 64)
+				rmr = append(rmr, domain.RoleMenuRelation{
+					Id:     config.IdGenerate(),
+					RoleId: roleId,
+					MenuId: menuId,
+				})
+			}
+			if err = tx.Create(&rmr).Error; err != nil {
+				return err
+			}
 		}
 		return nil
 	})
@@ -105,9 +140,9 @@ func UpdateRole(c *gin.Context) {
 	}
 	if roleAdd.Code != role.Code {
 		var role domain.Role
-		err = service.FindByCode(&role, roleAdd.Name)
+		err = service.FindByCode(&role, roleAdd.Code)
 		if err == nil {
-			c.String(http.StatusBadRequest, "名称已存在")
+			c.String(http.StatusBadRequest, "编码已存在")
 			return
 		}
 	}
@@ -127,17 +162,19 @@ func UpdateRole(c *gin.Context) {
 				return err
 			}
 		}
-		var rmr []domain.RoleMenuRelation
-		for _, id := range roleAdd.MenuIds {
-			menuId, _ := strconv.ParseInt(id, 10, 64)
-			rmr = append(rmr, domain.RoleMenuRelation{
-				Id:     config.IdGenerate(),
-				RoleId: roleId,
-				MenuId: menuId,
-			})
-		}
-		if err = tx.Create(&rmr).Error; err != nil {
-			return err
+		if len(roleAdd.MenuIds) > 0 {
+			var rmr []domain.RoleMenuRelation
+			for _, id := range roleAdd.MenuIds {
+				menuId, _ := strconv.ParseInt(id, 10, 64)
+				rmr = append(rmr, domain.RoleMenuRelation{
+					Id:     config.IdGenerate(),
+					RoleId: roleId,
+					MenuId: menuId,
+				})
+			}
+			if err = tx.Create(&rmr).Error; err != nil {
+				return err
+			}
 		}
 		return nil
 	})
