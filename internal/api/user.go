@@ -6,6 +6,7 @@ import (
 	"gin-admin-template/internal/service"
 	"gin-admin-template/internal/util"
 	"github.com/gin-gonic/gin"
+	"github.com/jinzhu/copier"
 	"gorm.io/gorm"
 	"net/http"
 	"strconv"
@@ -22,6 +23,11 @@ type UserAdd struct {
 	RoleIds []string `json:"roleIds,omitempty"`
 }
 
+type UserOrg struct {
+	domain.User
+	OrgName string `json:"orgName"`
+}
+
 func GetUsers(c *gin.Context) {
 	var q UserQuery
 	err := c.ShouldBindQuery(&q)
@@ -30,7 +36,21 @@ func GetUsers(c *gin.Context) {
 		return
 	}
 	page := service.Pagination(config.DB, q.PageIndex, q.PageSize, []domain.User{})
-	c.JSON(http.StatusOK, page)
+	result := service.PagedResult[UserOrg]{
+		Total: page.Total,
+	}
+	for _, d := range page.Data {
+		var org domain.Org
+		err := service.FindById(&org, d.OrgId)
+		if err == nil {
+			var userOrg UserOrg
+			copier.Copy(&userOrg, &d)
+			userOrg.OrgName = org.Name
+			userOrg.Password = ""
+			result.Data = append(result.Data, userOrg)
+		}
+	}
+	c.JSON(http.StatusOK, result)
 }
 
 func GetUser(c *gin.Context) {
@@ -45,6 +65,7 @@ func GetUser(c *gin.Context) {
 		c.String(http.StatusBadRequest, "查询失败")
 		return
 	}
+	user.Password = ""
 	c.JSON(http.StatusOK, user)
 }
 

@@ -21,3 +21,12 @@ func FindMenuIdsByRoleId(id int64) ([]string, error) {
 	}
 	return ids, nil
 }
+
+func FindRolesByOrgId(orgId int64) ([]domain.Role, error) {
+	var roles []domain.Role
+	err := config.DB.Find(&roles, "org_id = ?", orgId).Error
+	if err != nil {
+		return roles, err
+	}
+	return roles, nil
+}

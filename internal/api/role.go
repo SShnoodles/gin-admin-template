@@ -79,6 +79,20 @@ func GetRoleMenus(c *gin.Context) {
 	c.JSON(http.StatusOK, menusIds)
 }
 
+func GetOrgRoles(c *gin.Context) {
+	orgId, err := strconv.ParseInt(c.Param("orgId"), 10, 64)
+	if err != nil {
+		c.String(http.StatusBadRequest, "参数不正确")
+		return
+	}
+	roles, err := service.FindRolesByOrgId(orgId)
+	if err != nil {
+		c.String(http.StatusBadRequest, "查询失败")
+		return
+	}
+	c.JSON(http.StatusOK, roles)
+}
+
 func CreateRole(c *gin.Context) {
 	var roleAdd RoleAdd
 	err := c.ShouldBindJSON(&roleAdd)
