@@ -21,6 +21,7 @@ func SetApiRouter(router *gin.Engine) {
 		usersRouter.POST("", api.CreateUser)
 		usersRouter.PUT(":id", api.UpdateUser)
 		usersRouter.DELETE(":id", api.DeleteUser)
+		usersRouter.GET(":id/roles", api.GetUserRoles)
 	}
 	// org
 	orgsRouter := router.Group("orgs")

@@ -66,7 +66,22 @@ func GetUser(c *gin.Context) {
 		return
 	}
 	user.Password = ""
+
 	c.JSON(http.StatusOK, user)
+}
+
+func GetUserRoles(c *gin.Context) {
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		c.String(http.StatusBadRequest, "参数不正确")
+		return
+	}
+	roles, err := service.FindRoleIdsByUserId(id)
+	if err != nil {
+		c.String(http.StatusBadRequest, "查询失败")
+		return
+	}
+	c.JSON(http.StatusOK, roles)
 }
 
 func CreateUser(c *gin.Context) {
@@ -155,7 +170,7 @@ func UpdateUser(c *gin.Context) {
 			return err
 		}
 		var oldUrr []domain.UserRoleRelation
-		if err = tx.Where("user_id = ?", user).Find(&oldUrr).Error; err != nil {
+		if err = tx.Where("user_id = ?", userId).Find(&oldUrr).Error; err != nil {
 			return err
 		}
 		if len(oldUrr) > 0 {
