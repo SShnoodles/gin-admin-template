@@ -1,7 +1,7 @@
 package api
 
 import (
-	"context"
+	"gin-admin-template/internal/config"
 	"gin-admin-template/internal/domain"
 	"gin-admin-template/internal/middleware"
 	"gin-admin-template/internal/service"
@@ -25,13 +25,12 @@ type LoginResult struct {
 	RefreshToken string    `json:"refreshToken"`
 }
 
-var ctx = context.Background()
-
 func Login(c *gin.Context) {
 	var login LoginInfo
 	err := c.ShouldBindJSON(&login)
 	if err != nil {
 		c.String(http.StatusBadRequest, "参数错误")
+		config.Log.Error(err.Error())
 		return
 	}
 	msg := middleware.ValidateParam(&login)
@@ -70,6 +69,7 @@ func Captcha(c *gin.Context) {
 	id, b64s, _, err := captcha.Generate()
 	if err != nil {
 		c.String(http.StatusUnauthorized, "创建验证码失败")
+		config.Log.Error(err.Error())
 		return
 	}
 	var result = make(map[string]string)

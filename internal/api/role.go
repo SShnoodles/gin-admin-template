@@ -31,6 +31,7 @@ func GetRoles(c *gin.Context) {
 	err := c.ShouldBindQuery(&q)
 	if err != nil {
 		c.String(http.StatusBadRequest, "参数错误")
+		config.Log.Error(err.Error())
 		return
 	}
 	page := service.Pagination(config.DB, q.PageIndex, q.PageSize, []domain.Role{})
@@ -54,12 +55,14 @@ func GetRole(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
 		c.String(http.StatusBadRequest, "参数不正确")
+		config.Log.Error(err.Error())
 		return
 	}
 	var role domain.Role
 	err = service.FindById(&role, id)
 	if err != nil {
 		c.String(http.StatusBadRequest, "查询失败")
+		config.Log.Error(err.Error())
 		return
 	}
 	c.JSON(http.StatusOK, role)
@@ -69,11 +72,13 @@ func GetRoleMenus(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
 		c.String(http.StatusBadRequest, "参数不正确")
+		config.Log.Error(err.Error())
 		return
 	}
 	menusIds, err := service.FindMenuIdsByRoleId(id)
 	if err != nil {
 		c.String(http.StatusBadRequest, "查询失败")
+		config.Log.Error(err.Error())
 		return
 	}
 	c.JSON(http.StatusOK, menusIds)
@@ -83,11 +88,13 @@ func GetOrgRoles(c *gin.Context) {
 	orgId, err := strconv.ParseInt(c.Param("orgId"), 10, 64)
 	if err != nil {
 		c.String(http.StatusBadRequest, "参数不正确")
+		config.Log.Error(err.Error())
 		return
 	}
 	roles, err := service.FindRolesByOrgId(orgId)
 	if err != nil {
 		c.String(http.StatusBadRequest, "查询失败")
+		config.Log.Error(err.Error())
 		return
 	}
 	c.JSON(http.StatusOK, roles)
@@ -98,6 +105,7 @@ func CreateRole(c *gin.Context) {
 	err := c.ShouldBindJSON(&roleAdd)
 	if err != nil {
 		c.String(http.StatusBadRequest, "参数错误")
+		config.Log.Error(err.Error())
 		return
 	}
 	roleId := config.IdGenerate()
@@ -129,6 +137,7 @@ func CreateRole(c *gin.Context) {
 	})
 	if err != nil {
 		c.String(http.StatusBadRequest, "新增失败")
+		config.Log.Error(err.Error())
 		return
 	}
 	c.JSON(http.StatusOK, domain.NewIdWrapper(roleId))
@@ -138,18 +147,21 @@ func UpdateRole(c *gin.Context) {
 	roleId, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
 		c.String(http.StatusBadRequest, "参数不正确")
+		config.Log.Error(err.Error())
 		return
 	}
 	var roleAdd RoleAdd
 	err = c.ShouldBindJSON(&roleAdd)
 	if err != nil {
 		c.String(http.StatusBadRequest, "参数错误")
+		config.Log.Error(err.Error())
 		return
 	}
 	var role domain.Role
 	err = service.FindById(&role, roleId)
 	if err != nil {
 		c.String(http.StatusBadRequest, "角色不存在")
+		config.Log.Error(err.Error())
 		return
 	}
 	if roleAdd.Code != role.Code {
@@ -194,6 +206,7 @@ func UpdateRole(c *gin.Context) {
 	})
 	if err != nil {
 		c.String(http.StatusBadRequest, "更新失败")
+		config.Log.Error(err.Error())
 		return
 	}
 	c.JSON(http.StatusOK, domain.NewMessageWrapper("更新成功"))
@@ -203,12 +216,14 @@ func DeleteRole(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
 		c.String(http.StatusBadRequest, "参数不正确")
+		config.Log.Error(err.Error())
 		return
 	}
 	var role domain.Role
 	err = service.FindById(&role, id)
 	if err != nil {
 		c.String(http.StatusBadRequest, "数据不存在")
+		config.Log.Error(err.Error())
 		return
 	}
 	err = config.DB.Transaction(func(tx *gorm.DB) error {
@@ -222,6 +237,7 @@ func DeleteRole(c *gin.Context) {
 	})
 	if err != nil {
 		c.String(http.StatusBadRequest, "删除失败")
+		config.Log.Error(err.Error())
 		return
 	}
 	c.JSON(http.StatusOK, domain.NewMessageWrapper("删除成功"))

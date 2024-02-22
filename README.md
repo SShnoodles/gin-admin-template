@@ -1,18 +1,24 @@
 # Gin template
-gin + gorm 项目模版
+gin + gorm project template
 
-## 功能清单
-* [ ] 机构
-* [ ] 菜单
-* [ ] 角色
-* [ ] 用户
+## Feature Checklist
+* [ ] Resources
+* [x] Menus
+* [x] Organizations
+* [x] Roles
+* [x] Users
 
-## 配置文件
+## Configuration File
 config.yml
 
 ```yaml
 server:
   port: 8080
+logging:
+  level: info
+  file:
+    name: app.log
+    path: logs
 datasource:
   driver: mysql
   url: tcp(127.0.0.1:3306)/test?charset=utf8mb4&parseTime=True&loc=Local

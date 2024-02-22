@@ -6,7 +6,6 @@ import (
 	"gin-admin-template/internal/service"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
-	"log"
 	"net/http"
 	"strconv"
 )
@@ -26,6 +25,7 @@ func GetOrgs(c *gin.Context) {
 	err := c.ShouldBindQuery(&q)
 	if err != nil {
 		c.String(http.StatusBadRequest, "参数错误")
+		config.Log.Error(err.Error())
 		return
 	}
 	if q.PageSize == 0 {
@@ -33,6 +33,7 @@ func GetOrgs(c *gin.Context) {
 		err := service.FindAll(&orgs)
 		if err != nil {
 			c.String(http.StatusBadRequest, "查询失败")
+			config.Log.Error(err.Error())
 			return
 		}
 		c.JSON(http.StatusOK, orgs)
@@ -46,12 +47,14 @@ func GetOrg(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
 		c.String(http.StatusBadRequest, "参数不正确")
+		config.Log.Error(err.Error())
 		return
 	}
 	var org domain.Org
 	err = service.FindById(&org, id)
 	if err != nil {
 		c.String(http.StatusBadRequest, "查询失败")
+		config.Log.Error(err.Error())
 		return
 	}
 	c.JSON(http.StatusOK, org)
@@ -61,11 +64,13 @@ func GetOrgMenus(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
 		c.String(http.StatusBadRequest, "参数不正确")
+		config.Log.Error(err.Error())
 		return
 	}
 	menusIds, err := service.FindMenuIdsByOrgId(id)
 	if err != nil {
 		c.String(http.StatusBadRequest, "查询失败")
+		config.Log.Error(err.Error())
 		return
 	}
 	c.JSON(http.StatusOK, menusIds)
@@ -75,8 +80,8 @@ func CreateOrg(c *gin.Context) {
 	var orgAdd OrgAdd
 	err := c.ShouldBindJSON(&orgAdd)
 	if err != nil {
-		log.Println(err)
 		c.String(http.StatusBadRequest, "参数错误")
+		config.Log.Error(err.Error())
 		return
 	}
 	var org domain.Org
@@ -115,6 +120,7 @@ func CreateOrg(c *gin.Context) {
 	})
 	if err != nil {
 		c.String(http.StatusBadRequest, "新增失败")
+		config.Log.Error(err.Error())
 		return
 	}
 	c.JSON(http.StatusOK, domain.NewIdWrapper(orgId))
@@ -124,18 +130,21 @@ func UpdateOrg(c *gin.Context) {
 	orgId, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
 		c.String(http.StatusBadRequest, "参数不正确")
+		config.Log.Error(err.Error())
 		return
 	}
 	var orgAdd OrgAdd
 	err = c.ShouldBindJSON(&orgAdd)
 	if err != nil {
 		c.String(http.StatusBadRequest, "参数错误")
+		config.Log.Error(err.Error())
 		return
 	}
 	var org domain.Org
 	err = service.FindById(&org, orgId)
 	if err != nil {
 		c.String(http.StatusBadRequest, "机构不存在")
+		config.Log.Error(err.Error())
 		return
 	}
 	if orgAdd.Name != org.Name {
@@ -181,6 +190,7 @@ func UpdateOrg(c *gin.Context) {
 
 	if err != nil {
 		c.String(http.StatusBadRequest, "更新失败")
+		config.Log.Error(err.Error())
 		return
 	}
 	c.JSON(http.StatusOK, domain.NewMessageWrapper("更新成功"))
@@ -190,12 +200,14 @@ func DeleteOrg(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
 		c.String(http.StatusBadRequest, "参数不正确")
+		config.Log.Error(err.Error())
 		return
 	}
 	var org domain.Org
 	err = service.FindById(&org, id)
 	if err != nil {
 		c.String(http.StatusBadRequest, "数据不存在")
+		config.Log.Error(err.Error())
 		return
 	}
 	err = config.DB.Transaction(func(tx *gorm.DB) error {
@@ -209,6 +221,7 @@ func DeleteOrg(c *gin.Context) {
 	})
 	if err != nil {
 		c.String(http.StatusBadRequest, "删除失败")
+		config.Log.Error(err.Error())
 		return
 	}
 

@@ -2,12 +2,12 @@ package config
 
 import (
 	"github.com/spf13/viper"
-	"log"
 	"os"
 )
 
 type Config struct {
 	Server     Server
+	Logging    Logging
 	Datasource Datasource
 	Redis      Redis
 	Jwt        Jwt
@@ -15,6 +15,16 @@ type Config struct {
 
 type Server struct {
 	Port int
+}
+
+type Logging struct {
+	File  File
+	Level string
+}
+
+type File struct {
+	Name string
+	Path string
 }
 
 type Datasource struct {
@@ -49,9 +59,9 @@ func init() {
 	v.SetConfigType("yml")
 	err = v.ReadInConfig()
 	if err := v.ReadInConfig(); err != nil {
-		log.Fatal("read conf failed ", err)
+		Log.Fatal("read conf failed ", err)
 	}
 	if err := v.Unmarshal(&AppConfig); err != nil {
-		log.Fatal("unable to decode into struct ", err)
+		Log.Fatal("unable to decode into struct ", err)
 	}
 }

@@ -24,12 +24,14 @@ func GetMenus(c *gin.Context) {
 	err := c.ShouldBindQuery(&q)
 	if err != nil {
 		c.String(http.StatusBadRequest, "参数错误")
+		config.Log.Error(err.Error())
 		return
 	}
 	var menus []domain.Menu
 	err = service.FindAll(&menus)
 	if err != nil {
 		c.String(http.StatusBadRequest, "查询失败")
+		config.Log.Error(err.Error())
 		return
 	}
 	var menuTree []*MenuTree
@@ -57,12 +59,14 @@ func GetMenu(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
 		c.String(http.StatusBadRequest, "参数不正确")
+		config.Log.Error(err.Error())
 		return
 	}
 	var menu domain.Menu
 	err = service.FindById(&menu, id)
 	if err != nil {
 		c.String(http.StatusBadRequest, "查询失败")
+		config.Log.Error(err.Error())
 		return
 	}
 	c.JSON(http.StatusOK, menu)
@@ -73,6 +77,7 @@ func CreateMenu(c *gin.Context) {
 	err := c.ShouldBindJSON(&menu)
 	if err != nil {
 		c.String(http.StatusBadRequest, "参数错误")
+		config.Log.Error(err.Error())
 		return
 	}
 	_, err = service.FindMenuByPath(menu.Path)
@@ -84,6 +89,7 @@ func CreateMenu(c *gin.Context) {
 	err = service.Insert(&menu)
 	if err != nil {
 		c.String(http.StatusBadRequest, "参数错误")
+		config.Log.Error(err.Error())
 		return
 	}
 	c.JSON(http.StatusOK, domain.NewIdWrapper(menu.Id))
@@ -93,12 +99,14 @@ func UpdateMenu(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
 		c.String(http.StatusBadRequest, "参数不正确")
+		config.Log.Error(err.Error())
 		return
 	}
 	var menu domain.Menu
 	err = c.ShouldBindJSON(&menu)
 	if err != nil {
 		c.String(http.StatusBadRequest, "参数错误")
+		config.Log.Error(err.Error())
 		return
 	}
 	menu.Id = id
@@ -106,6 +114,7 @@ func UpdateMenu(c *gin.Context) {
 	err = service.FindById(&oldMenu, menu.Id)
 	if err != nil {
 		c.String(http.StatusBadRequest, "机构不存在")
+		config.Log.Error(err.Error())
 		return
 	}
 	if menu.Path != oldMenu.Path {
@@ -119,6 +128,7 @@ func UpdateMenu(c *gin.Context) {
 	err = service.Update(&menu)
 	if err != nil {
 		c.String(http.StatusBadRequest, "更新失败")
+		config.Log.Error(err.Error())
 		return
 	}
 	c.JSON(http.StatusOK, domain.NewMessageWrapper("更新成功"))
@@ -128,16 +138,19 @@ func DeleteMenu(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
 		c.String(http.StatusBadRequest, "参数不正确")
+		config.Log.Error(err.Error())
 		return
 	}
 	err = service.DeleteById(domain.Menu{}, id)
 	if err != nil {
 		c.String(http.StatusBadRequest, "删除失败")
+		config.Log.Error(err.Error())
 		return
 	}
 	err = service.DeleteMenusByPid(id)
 	if err != nil {
 		c.String(http.StatusBadRequest, "删除失败")
+		config.Log.Error(err.Error())
 		return
 	}
 	c.JSON(http.StatusOK, domain.NewMessageWrapper("删除成功"))

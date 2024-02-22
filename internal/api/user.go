@@ -33,6 +33,7 @@ func GetUsers(c *gin.Context) {
 	err := c.ShouldBindQuery(&q)
 	if err != nil {
 		c.String(http.StatusBadRequest, "参数错误")
+		config.Log.Error(err.Error())
 		return
 	}
 	page := service.Pagination(config.DB, q.PageIndex, q.PageSize, []domain.User{})
@@ -57,12 +58,14 @@ func GetUser(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
 		c.String(http.StatusBadRequest, "参数不正确")
+		config.Log.Error(err.Error())
 		return
 	}
 	var user domain.User
 	err = service.FindById(&user, id)
 	if err != nil {
 		c.String(http.StatusBadRequest, "查询失败")
+		config.Log.Error(err.Error())
 		return
 	}
 	user.Password = ""
@@ -74,11 +77,13 @@ func GetUserRoles(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
 		c.String(http.StatusBadRequest, "参数不正确")
+		config.Log.Error(err.Error())
 		return
 	}
 	roles, err := service.FindRoleIdsByUserId(id)
 	if err != nil {
 		c.String(http.StatusBadRequest, "查询失败")
+		config.Log.Error(err.Error())
 		return
 	}
 	c.JSON(http.StatusOK, roles)
@@ -89,11 +94,13 @@ func CreateUser(c *gin.Context) {
 	err := c.ShouldBindJSON(&userAdd)
 	if err != nil {
 		c.String(http.StatusBadRequest, "参数错误")
+		config.Log.Error(err.Error())
 		return
 	}
 	user, _ := service.FindUserByUsername(userAdd.Username)
 	if user != (domain.User{}) {
 		c.String(http.StatusBadRequest, "用户已存在")
+		config.Log.Error(err.Error())
 		return
 	}
 
@@ -130,6 +137,7 @@ func CreateUser(c *gin.Context) {
 	})
 	if err != nil {
 		c.String(http.StatusBadRequest, "参数错误")
+		config.Log.Error(err.Error())
 		return
 	}
 	c.JSON(http.StatusOK, domain.NewIdWrapper(userId))
@@ -139,18 +147,21 @@ func UpdateUser(c *gin.Context) {
 	userId, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
 		c.String(http.StatusBadRequest, "参数不正确")
+		config.Log.Error(err.Error())
 		return
 	}
 	var userAdd UserAdd
 	err = c.ShouldBindJSON(&userAdd)
 	if err != nil {
 		c.String(http.StatusBadRequest, "参数错误")
+		config.Log.Error(err.Error())
 		return
 	}
 	var user domain.User
 	err = service.FindById(&user, userId)
 	if err != nil {
 		c.String(http.StatusBadRequest, "用户不存在")
+		config.Log.Error(err.Error())
 		return
 	}
 	if user.Username != userAdd.Username {
@@ -196,6 +207,7 @@ func UpdateUser(c *gin.Context) {
 	})
 	if err != nil {
 		c.String(http.StatusBadRequest, "更新失败")
+		config.Log.Error(err.Error())
 		return
 	}
 	c.JSON(http.StatusOK, domain.NewMessageWrapper("更新成功"))
@@ -205,6 +217,7 @@ func DeleteUser(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
 		c.String(http.StatusBadRequest, "参数不正确")
+		config.Log.Error(err.Error())
 		return
 	}
 
@@ -212,6 +225,7 @@ func DeleteUser(c *gin.Context) {
 	err = service.FindById(&user, id)
 	if err != nil {
 		c.String(http.StatusBadRequest, "数据不存在")
+		config.Log.Error(err.Error())
 		return
 	}
 	err = config.DB.Transaction(func(tx *gorm.DB) error {
@@ -226,6 +240,7 @@ func DeleteUser(c *gin.Context) {
 
 	if err != nil {
 		c.String(http.StatusBadRequest, "删除失败")
+		config.Log.Error(err.Error())
 		return
 	}
 	c.JSON(http.StatusOK, domain.NewMessageWrapper("删除成功"))
