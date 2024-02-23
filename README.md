@@ -19,6 +19,8 @@ logging:
   file:
     name: app.log
     path: logs
+# en/zh-CN
+language: en
 datasource:
   driver: mysql
   url: tcp(127.0.0.1:3306)/test?charset=utf8mb4&parseTime=True&loc=Local

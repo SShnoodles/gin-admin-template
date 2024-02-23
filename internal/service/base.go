@@ -3,7 +3,11 @@ package service
 import (
 	"errors"
 	"gin-admin-template/internal/config"
+	"gin-admin-template/internal/domain"
+	"github.com/gin-gonic/gin"
+	"github.com/nicksnyder/go-i18n/v2/i18n"
 	"gorm.io/gorm"
+	"net/http"
 )
 
 func FindById[T any](t *T, id int64) error {
@@ -69,4 +73,39 @@ func Pagination[T any](db *gorm.DB, page int, size int, out []T) PagedResult[T] 
 		Data:  out,
 		Total: total,
 	}
+}
+
+func ParamBadRequestResult(c *gin.Context, err error) {
+	localize, _ := config.I18nLoc.LocalizeMessage(&i18n.Message{ID: "Error.param"})
+	c.String(http.StatusBadRequest, localize)
+	config.Log.Error(err.Error())
+}
+
+func BadRequestResult(c *gin.Context, messageId string, err error) {
+	localize, _ := config.I18nLoc.LocalizeMessage(&i18n.Message{ID: messageId})
+	c.String(http.StatusBadRequest, localize)
+	config.Log.Error(err.Error())
+}
+
+func UnauthorizedResult(c *gin.Context, messageId string) {
+	localize, _ := config.I18nLoc.LocalizeMessage(&i18n.Message{ID: messageId})
+	c.String(http.StatusUnauthorized, localize)
+}
+
+func ConflictResult(c *gin.Context, messageId string) {
+	localize, _ := config.I18nLoc.LocalizeMessage(&i18n.Message{ID: messageId})
+	c.String(http.StatusConflict, localize)
+}
+
+func UpdateSuccessResult() domain.MessageWrapper {
+	return SuccessResult("Success.update")
+}
+
+func DeleteSuccessResult() domain.MessageWrapper {
+	return SuccessResult("Success.delete")
+}
+
+func SuccessResult(messageId string) domain.MessageWrapper {
+	localize, _ := config.I18nLoc.LocalizeMessage(&i18n.Message{ID: messageId})
+	return domain.NewMessageWrapper(localize)
 }

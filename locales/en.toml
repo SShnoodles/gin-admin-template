@@ -1,0 +1,25 @@
+[Error]
+code = "Verification code error"
+param = "Parameter error"
+password = "Password error"
+
+[Existed]
+name = "Name already exists"
+path = "Path already exists"
+user = "User already exists"
+
+[NotExist]
+org = "Organization does not exist"
+role = "Role does not exist"
+user = "User does not exist"
+
+[Failed]
+create = "Create failed"
+query = "Query failed"
+update = "Update failed"
+delete = "Delete failed"
+
+[Success]
+create = "Create success"
+update = "Update success"
+delete = "Delete success"

@@ -1,0 +1,26 @@
+[Error]
+code = "验证码错误"
+param = "参数错误"
+password = "密码错误"
+
+[Failed]
+create = "创建失败"
+query = "查询失败"
+update = "更新失败"
+delete = "删除失败"
+
+[Success]
+create = "创建成功"
+update = "更新成功"
+delete = "删除成功"
+
+[Existed]
+name = "名称已存在"
+code = "编码已存在"
+path = "路径已存在"
+user = "用户已存在"
+
+[NotExist]
+org = "机构不存在"
+role = "角色不存在"
+user = "用户不存在"

@@ -11,6 +11,7 @@ type Config struct {
 	Datasource Datasource
 	Redis      Redis
 	Jwt        Jwt
+	Language   string
 }
 
 type Server struct {
@@ -45,7 +46,9 @@ type Redis struct {
 	Db       int
 }
 
-var AppConfig = &Config{}
+var AppConfig = &Config{
+	Language: "en",
+}
 
 func init() {
 	wd, err := os.Getwd()
@@ -64,4 +67,8 @@ func init() {
 	if err := v.Unmarshal(&AppConfig); err != nil {
 		Log.Fatal("unable to decode into struct ", err)
 	}
+}
+
+func IsDefaultLanguage() bool {
+	return AppConfig.Language == "en"
 }

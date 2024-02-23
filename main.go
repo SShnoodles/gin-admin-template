@@ -24,6 +24,6 @@ func main() {
 	r.Static("/assets", dir+"/web/dist/assets")
 	r.GET("/", api.HtmlHandler)
 
-	config.Log.Infof("Run at %d", config.AppConfig.Server.Port)
+	config.Log.Infof("Listening on %d", config.AppConfig.Server.Port)
 	r.Run(":" + strconv.Itoa(config.AppConfig.Server.Port))
 }

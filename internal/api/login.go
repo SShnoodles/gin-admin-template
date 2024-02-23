@@ -1,7 +1,6 @@
 package api
 
 import (
-	"gin-admin-template/internal/config"
 	"gin-admin-template/internal/domain"
 	"gin-admin-template/internal/middleware"
 	"gin-admin-template/internal/service"
@@ -29,8 +28,7 @@ func Login(c *gin.Context) {
 	var login LoginInfo
 	err := c.ShouldBindJSON(&login)
 	if err != nil {
-		c.String(http.StatusBadRequest, "参数错误")
-		config.Log.Error(err.Error())
+		service.ParamBadRequestResult(c, err)
 		return
 	}
 	msg := middleware.ValidateParam(&login)
@@ -40,18 +38,18 @@ func Login(c *gin.Context) {
 	}
 	// check code
 	if !base64Captcha.DefaultMemStore.Verify(login.CodeId, login.Code, true) {
-		c.String(http.StatusUnauthorized, "验证码错误")
+		service.UnauthorizedResult(c, "Error.code")
 		return
 	}
 	// check password
 	user, err := service.FindUserByUsername(login.Username)
 	if user == (domain.User{}) {
-		c.String(http.StatusUnauthorized, "用户不存在")
+		service.UnauthorizedResult(c, "NotExist.user")
 		return
 	}
 	isRight := util.VerifyPassword(login.Password, user.Password)
 	if !isRight {
-		c.String(http.StatusUnauthorized, "密码错误")
+		service.UnauthorizedResult(c, "Error.password")
 		return
 	}
 	// create jwt
@@ -68,8 +66,7 @@ func Captcha(c *gin.Context) {
 	captcha := base64Captcha.NewCaptcha(driver, base64Captcha.DefaultMemStore)
 	id, b64s, _, err := captcha.Generate()
 	if err != nil {
-		c.String(http.StatusUnauthorized, "创建验证码失败")
-		config.Log.Error(err.Error())
+		service.BadRequestResult(c, "Failed.create", err)
 		return
 	}
 	var result = make(map[string]string)

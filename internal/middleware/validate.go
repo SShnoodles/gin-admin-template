@@ -1,11 +1,13 @@
 package middleware
 
 import (
+	"gin-admin-template/internal/config"
+	"github.com/go-playground/locales/en"
 	"github.com/go-playground/locales/zh"
 	ut "github.com/go-playground/universal-translator"
 	"github.com/go-playground/validator/v10"
+	entranslations "github.com/go-playground/validator/v10/translations/en"
 	zhtranslations "github.com/go-playground/validator/v10/translations/zh"
-	"log"
 )
 
 var Validate *validator.Validate
@@ -14,15 +16,23 @@ var Trans ut.Translator
 func init() {
 	Validate = validator.New()
 
-	// 中文翻译器
-	uni := ut.New(zh.New())
-	trans, _ := uni.GetTranslator("zh")
-
-	err := zhtranslations.RegisterDefaultTranslations(Validate, trans)
-	if err != nil {
-		log.Fatal(err)
+	if config.IsDefaultLanguage() {
+		uni := ut.New(en.New())
+		trans, _ := uni.GetTranslator("en")
+		err := entranslations.RegisterDefaultTranslations(Validate, trans)
+		if err != nil {
+			config.Log.Fatal(err)
+		}
+		Trans = trans
+	} else {
+		uni := ut.New(zh.New())
+		trans, _ := uni.GetTranslator("zh")
+		err := zhtranslations.RegisterDefaultTranslations(Validate, trans)
+		if err != nil {
+			config.Log.Fatal(err)
+		}
+		Trans = trans
 	}
-	Trans = trans
 }
 
 func ValidateParam(param interface{}) string {
