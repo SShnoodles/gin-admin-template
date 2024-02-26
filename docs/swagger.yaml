@@ -1,0 +1,48 @@
+definitions:
+  api.LoginInfo:
+    properties:
+      code:
+        type: string
+      codeId:
+        type: string
+      password:
+        type: string
+      username:
+        type: string
+    required:
+    - code
+    - codeId
+    - password
+    - username
+    type: object
+info:
+  contact: {}
+paths:
+  /login/account:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 信息
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/api.LoginInfo'
+      produces:
+      - application/json
+      responses: {}
+      summary: 用户登录
+      tags:
+      - 登录
+  /login/captcha:
+    post:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses: {}
+      summary: 验证码
+      tags:
+      - 登录
+swagger: "2.0"

@@ -24,6 +24,13 @@ type LoginResult struct {
 	RefreshToken string    `json:"refreshToken"`
 }
 
+// Login
+// @Summary 用户登录
+// @Tags 登录
+// @Accept json
+// @Produce json
+// @Param data body LoginInfo true "信息"
+// @Router /login/account [post]
 func Login(c *gin.Context) {
 	var login LoginInfo
 	err := c.ShouldBindJSON(&login)
@@ -61,6 +68,12 @@ func Login(c *gin.Context) {
 	c.JSON(http.StatusOK, result)
 }
 
+// Captcha
+// @Summary 验证码
+// @Tags 登录
+// @Accept json
+// @Produce json
+// @Router /login/captcha [post]
 func Captcha(c *gin.Context) {
 	driver := base64Captcha.NewDriverDigit(80, 240, 4, 0.7, 80)
 	captcha := base64Captcha.NewCaptcha(driver, base64Captcha.DefaultMemStore)

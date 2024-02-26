@@ -34,3 +34,9 @@ redis:
   password:
   db: 0
 ```
+
+## Swagger
+```shell
+go install github.com/swaggo/swag/cmd/swag@latest
+swag init
+```
