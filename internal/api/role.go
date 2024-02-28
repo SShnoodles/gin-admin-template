@@ -26,6 +26,14 @@ type RoleOrg struct {
 	OrgName string `json:"orgName"`
 }
 
+// GetRoles
+// @Summary List roles 获取机构列表
+// @Tags roles 角色
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param name query string false "name 名称"
+// @Router /roles [get]
 func GetRoles(c *gin.Context) {
 	var q RoleQuery
 	err := c.ShouldBindQuery(&q)
@@ -50,6 +58,14 @@ func GetRoles(c *gin.Context) {
 	c.JSON(http.StatusOK, result)
 }
 
+// GetRole
+// @Summary Role 获取角色
+// @Tags roles 角色
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param id path string true "Org ID"
+// @Router /roles/{id} [get]
 func GetRole(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
@@ -65,6 +81,14 @@ func GetRole(c *gin.Context) {
 	c.JSON(http.StatusOK, role)
 }
 
+// GetRoleMenus
+// @Summary Role menus 获取角色菜单
+// @Tags roles 角色
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param id path string true "Role ID"
+// @Router /roles/{id}/menus [get]
 func GetRoleMenus(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
@@ -79,6 +103,14 @@ func GetRoleMenus(c *gin.Context) {
 	c.JSON(http.StatusOK, menusIds)
 }
 
+// GetOrgRoles
+// @Summary Org roles 获取机构角色
+// @Tags roles 角色
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param orgId path string true "Org ID"
+// @Router /roles/orgs/{orgId} [get]
 func GetOrgRoles(c *gin.Context) {
 	orgId, err := strconv.ParseInt(c.Param("orgId"), 10, 64)
 	if err != nil {
@@ -93,6 +125,14 @@ func GetOrgRoles(c *gin.Context) {
 	c.JSON(http.StatusOK, roles)
 }
 
+// CreateRole
+// @Summary Create role 创建角色
+// @Tags roles 角色
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param data body RoleAdd true "Role info 角色信息"
+// @Router /roles [post]
 func CreateRole(c *gin.Context) {
 	var roleAdd RoleAdd
 	err := c.ShouldBindJSON(&roleAdd)
@@ -134,6 +174,15 @@ func CreateRole(c *gin.Context) {
 	c.JSON(http.StatusOK, domain.NewIdWrapper(roleId))
 }
 
+// UpdateRole
+// @Summary Update role 更新角色
+// @Tags roles 角色
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param id path string true "Role ID"
+// @Param data body RoleAdd true "Role info 角色信息"
+// @Router /roles/{id} [put]
 func UpdateRole(c *gin.Context) {
 	roleId, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
@@ -199,6 +248,14 @@ func UpdateRole(c *gin.Context) {
 	c.JSON(http.StatusOK, service.UpdateSuccessResult())
 }
 
+// DeleteRole
+// @Summary Delete role 删除角色
+// @Tags roles 角色
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param id path string true "Role ID"
+// @Router /roles/{id} [delete]
 func DeleteRole(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {

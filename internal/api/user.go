@@ -28,6 +28,14 @@ type UserOrg struct {
 	OrgName string `json:"orgName"`
 }
 
+// GetUsers
+// @Summary List users 用户列表
+// @Tags users 用户
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param name query string false "name 名称"
+// @Router /users [get]
 func GetUsers(c *gin.Context) {
 	var q UserQuery
 	err := c.ShouldBindQuery(&q)
@@ -53,6 +61,14 @@ func GetUsers(c *gin.Context) {
 	c.JSON(http.StatusOK, result)
 }
 
+// GetUser
+// @Summary User 获取用户
+// @Tags users 用户
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param id path string true "User ID"
+// @Router /users/{id} [get]
 func GetUser(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
@@ -70,6 +86,14 @@ func GetUser(c *gin.Context) {
 	c.JSON(http.StatusOK, user)
 }
 
+// GetUserRoles
+// @Summary User roles 获取用户角色
+// @Tags users 用户
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param id path string true "User ID"
+// @Router /users/{id}/roles [get]
 func GetUserRoles(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
@@ -84,6 +108,14 @@ func GetUserRoles(c *gin.Context) {
 	c.JSON(http.StatusOK, roles)
 }
 
+// CreateUser
+// @Summary Create user 创建用户
+// @Tags users 用户
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param data body UserAdd true "User info 用户信息"
+// @Router /users [post]
 func CreateUser(c *gin.Context) {
 	var userAdd UserAdd
 	err := c.ShouldBindJSON(&userAdd)
@@ -135,6 +167,15 @@ func CreateUser(c *gin.Context) {
 	c.JSON(http.StatusOK, domain.NewIdWrapper(userId))
 }
 
+// UpdateUser
+// @Summary Update users 更新用户
+// @Tags users 用户
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param id path string true "User ID"
+// @Param data body UserAdd true "User info 用户信息"
+// @Router /users/{id} [put]
 func UpdateUser(c *gin.Context) {
 	userId, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
@@ -201,6 +242,14 @@ func UpdateUser(c *gin.Context) {
 	c.JSON(http.StatusOK, service.UpdateSuccessResult())
 }
 
+// DeleteUser
+// @Summary Delete user 删除用户
+// @Tags users 用户
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param id path string true "User ID"
+// @Router /users/{id} [delete]
 func DeleteUser(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {

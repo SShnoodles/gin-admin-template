@@ -25,11 +25,11 @@ type LoginResult struct {
 }
 
 // Login
-// @Summary 用户登录
-// @Tags 登录
+// @Summary login 用户登录
+// @Tags login 登录
 // @Accept json
 // @Produce json
-// @Param data body LoginInfo true "信息"
+// @Param data body LoginInfo true "login info 信息"
 // @Router /login/account [post]
 func Login(c *gin.Context) {
 	var login LoginInfo
@@ -69,8 +69,8 @@ func Login(c *gin.Context) {
 }
 
 // Captcha
-// @Summary 验证码
-// @Tags 登录
+// @Summary captcha 验证码
+// @Tags login 登录
 // @Accept json
 // @Produce json
 // @Router /login/captcha [post]

@@ -20,6 +20,14 @@ type OrgAdd struct {
 	MenuIds []string `json:"menuIds,omitempty"`
 }
 
+// GetOrgs
+// @Summary List orgs 获取机构列表
+// @Tags orgs 机构
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param name query string false "name 名称"
+// @Router /orgs [get]
 func GetOrgs(c *gin.Context) {
 	var q OrgQuery
 	err := c.ShouldBindQuery(&q)
@@ -41,6 +49,14 @@ func GetOrgs(c *gin.Context) {
 	c.JSON(http.StatusOK, page)
 }
 
+// GetOrg
+// @Summary Org 获取机构
+// @Tags orgs 机构
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param id path string true "Org ID"
+// @Router /orgs/{id} [get]
 func GetOrg(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
@@ -56,6 +72,14 @@ func GetOrg(c *gin.Context) {
 	c.JSON(http.StatusOK, org)
 }
 
+// GetOrgMenus
+// @Summary Org menus 获取机构菜单
+// @Tags orgs 机构
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param id path string true "Org ID"
+// @Router /orgs/{id}/menus [get]
 func GetOrgMenus(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
@@ -70,6 +94,14 @@ func GetOrgMenus(c *gin.Context) {
 	c.JSON(http.StatusOK, menusIds)
 }
 
+// CreateOrg
+// @Summary Create org 创建机构
+// @Tags orgs 机构
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param data body OrgAdd true "Org info 机构信息"
+// @Router /orgs [post]
 func CreateOrg(c *gin.Context) {
 	var orgAdd OrgAdd
 	err := c.ShouldBindJSON(&orgAdd)
@@ -118,6 +150,15 @@ func CreateOrg(c *gin.Context) {
 	c.JSON(http.StatusOK, domain.NewIdWrapper(orgId))
 }
 
+// UpdateOrg
+// @Summary Update org 更新机构
+// @Tags orgs 机构
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param id path string true "Org ID"
+// @Param data body OrgAdd true "Org info 机构信息"
+// @Router /orgs/{id} [put]
 func UpdateOrg(c *gin.Context) {
 	orgId, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
@@ -184,6 +225,14 @@ func UpdateOrg(c *gin.Context) {
 	c.JSON(http.StatusOK, service.UpdateSuccessResult())
 }
 
+// DeleteOrg
+// @Summary Delete org 删除机构
+// @Tags orgs 机构
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param id path string true "Org ID"
+// @Router /orgs/{id} [delete]
 func DeleteOrg(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {

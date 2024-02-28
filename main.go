@@ -15,6 +15,11 @@ import (
 	"time"
 )
 
+// @title           Admin API
+// @version         1.0
+// @securityDefinitions.apikey ApiKeyAuth
+// @in header
+// @name Authorization
 func main() {
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.New()

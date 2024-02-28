@@ -36,7 +36,15 @@ redis:
 ```
 
 ## Swagger
+### install
 ```shell
 go install github.com/swaggo/swag/cmd/swag@latest
+```
+### init or update
+```shell
 swag init
+```
+### UI URL
+```shell
+http://localhost:8080/swagger/index.html
 ```

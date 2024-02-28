@@ -15,15 +15,104 @@ definitions:
     - password
     - username
     type: object
+  api.OrgAdd:
+    properties:
+      address:
+        type: string
+      createdAt:
+        type: string
+      creditCode:
+        type: string
+      id:
+        example: "0"
+        type: string
+      menuIds:
+        items:
+          type: string
+        type: array
+      name:
+        type: string
+      updatedAt:
+        type: string
+    type: object
+  api.RoleAdd:
+    properties:
+      code:
+        type: string
+      createdAt:
+        type: string
+      id:
+        example: "0"
+        type: string
+      menuIds:
+        items:
+          type: string
+        type: array
+      name:
+        type: string
+      orgId:
+        example: "0"
+        type: string
+      updatedAt:
+        type: string
+    type: object
+  api.UserAdd:
+    properties:
+      createdAt:
+        type: string
+      id:
+        example: "0"
+        type: string
+      orgId:
+        example: "0"
+        type: string
+      password:
+        type: string
+      realName:
+        type: string
+      roleIds:
+        items:
+          type: string
+        type: array
+      updatedAt:
+        type: string
+      username:
+        type: string
+      workNo:
+        type: string
+    type: object
+  domain.Menu:
+    properties:
+      createdAt:
+        type: string
+      icon:
+        type: string
+      id:
+        example: "0"
+        type: string
+      name:
+        type: string
+      path:
+        type: string
+      pid:
+        example: "0"
+        type: string
+      sort:
+        type: integer
+      updatedAt:
+        type: string
+    type: object
 info:
   contact: {}
+  title: Admin API
+  version: "1.0"
 paths:
   /login/account:
     post:
       consumes:
       - application/json
       parameters:
-      - description: 信息
+      - description: login info 信息
         in: body
         name: data
         required: true
@@ -32,9 +121,9 @@ paths:
       produces:
       - application/json
       responses: {}
-      summary: 用户登录
+      summary: login 用户登录
       tags:
-      - 登录
+      - login 登录
   /login/captcha:
     post:
       consumes:
@@ -42,7 +131,487 @@ paths:
       produces:
       - application/json
       responses: {}
-      summary: 验证码
+      summary: captcha 验证码
       tags:
-      - 登录
+      - login 登录
+  /menus:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: name 名称
+        in: query
+        name: name
+        type: string
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: List Menus 获取菜单列表
+      tags:
+      - menus 菜单
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Menu info 菜单信息
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/domain.Menu'
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Create menu 创建菜单
+      tags:
+      - menus 菜单
+  /menus/{id}:
+    delete:
+      consumes:
+      - application/json
+      parameters:
+      - description: Menu ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Delete menu 删除菜单
+      tags:
+      - menus 菜单
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: Menu ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Menu 获取菜单
+      tags:
+      - menus 菜单
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Menu ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Menu info 菜单信息
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/domain.Menu'
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Update menu 更新菜单
+      tags:
+      - menus 菜单
+  /orgs:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: name 名称
+        in: query
+        name: name
+        type: string
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: List orgs 获取机构列表
+      tags:
+      - orgs 机构
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Org info 机构信息
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/api.OrgAdd'
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Create org 创建机构
+      tags:
+      - orgs 机构
+  /orgs/{id}:
+    delete:
+      consumes:
+      - application/json
+      parameters:
+      - description: Org ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Delete org 删除机构
+      tags:
+      - orgs 机构
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: Org ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Org 获取机构
+      tags:
+      - orgs 机构
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Org ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Org info 机构信息
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/api.OrgAdd'
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Update org 更新机构
+      tags:
+      - orgs 机构
+  /orgs/{id}/menus:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: Org ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Org menus 获取机构菜单
+      tags:
+      - orgs 机构
+  /project/version:
+    get:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses: {}
+      summary: Version 版本
+      tags:
+      - project 项目
+  /resources:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: name 名称
+        in: query
+        name: name
+        type: string
+      - description: path 路径
+        in: query
+        name: path
+        type: string
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: List resources 获取资源列表
+      tags:
+      - resources 资源
+  /roles:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: name 名称
+        in: query
+        name: name
+        type: string
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: List roles 获取机构列表
+      tags:
+      - roles 角色
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Role info 角色信息
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/api.RoleAdd'
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Create role 创建角色
+      tags:
+      - roles 角色
+  /roles/{id}:
+    delete:
+      consumes:
+      - application/json
+      parameters:
+      - description: Role ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Delete role 删除角色
+      tags:
+      - roles 角色
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: Org ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Role 获取角色
+      tags:
+      - roles 角色
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Role ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Role info 角色信息
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/api.RoleAdd'
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Update role 更新角色
+      tags:
+      - roles 角色
+  /roles/{id}/menus:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: Role ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Role menus 获取角色菜单
+      tags:
+      - roles 角色
+  /roles/orgs/{orgId}:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: Org ID
+        in: path
+        name: orgId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Org roles 获取机构角色
+      tags:
+      - roles 角色
+  /users:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: name 名称
+        in: query
+        name: name
+        type: string
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: List users 用户列表
+      tags:
+      - users 用户
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: User info 用户信息
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/api.UserAdd'
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Create user 创建用户
+      tags:
+      - users 用户
+  /users/{id}:
+    delete:
+      consumes:
+      - application/json
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Delete user 删除用户
+      tags:
+      - users 用户
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: User 获取用户
+      tags:
+      - users 用户
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: User info 用户信息
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/api.UserAdd'
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Update users 更新用户
+      tags:
+      - users 用户
+  /users/{id}/roles:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: User roles 获取用户角色
+      tags:
+      - users 用户
+securityDefinitions:
+  ApiKeyAuth:
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"

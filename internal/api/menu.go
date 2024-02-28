@@ -19,6 +19,14 @@ type MenuTree struct {
 	Children []*MenuTree `json:"children"`
 }
 
+// GetMenus
+// @Summary List Menus 获取菜单列表
+// @Tags menus 菜单
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param name query string false "name 名称"
+// @Router /menus [get]
 func GetMenus(c *gin.Context) {
 	var q MenuQuery
 	err := c.ShouldBindQuery(&q)
@@ -53,6 +61,14 @@ func buildTree(menuTree []*MenuTree, pid int64) []*MenuTree {
 	return children
 }
 
+// GetMenu
+// @Summary Menu 获取菜单
+// @Tags menus 菜单
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param id path string true "Menu ID"
+// @Router /menus/{id} [get]
 func GetMenu(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
@@ -68,6 +84,14 @@ func GetMenu(c *gin.Context) {
 	c.JSON(http.StatusOK, menu)
 }
 
+// CreateMenu
+// @Summary Create menu 创建菜单
+// @Tags menus 菜单
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param data body domain.Menu true "Menu info 菜单信息"
+// @Router /menus [post]
 func CreateMenu(c *gin.Context) {
 	var menu domain.Menu
 	err := c.ShouldBindJSON(&menu)
@@ -89,6 +113,15 @@ func CreateMenu(c *gin.Context) {
 	c.JSON(http.StatusOK, domain.NewIdWrapper(menu.Id))
 }
 
+// UpdateMenu
+// @Summary Update menu 更新菜单
+// @Tags menus 菜单
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param id path string true "Menu ID"
+// @Param data body domain.Menu true "Menu info 菜单信息"
+// @Router /menus/{id} [put]
 func UpdateMenu(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
@@ -124,6 +157,14 @@ func UpdateMenu(c *gin.Context) {
 	c.JSON(http.StatusOK, service.UpdateSuccessResult())
 }
 
+// DeleteMenu
+// @Summary Delete menu 删除菜单
+// @Tags menus 菜单
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param id path string true "Menu ID"
+// @Router /menus/{id} [delete]
 func DeleteMenu(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
