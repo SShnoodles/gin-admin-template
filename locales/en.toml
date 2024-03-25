@@ -2,6 +2,7 @@
 code = "Verification code error"
 param = "Parameter error"
 password = "Password error"
+unAuth = "Unauthorized"
 
 [Existed]
 name = "Name already exists"

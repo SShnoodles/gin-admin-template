@@ -36,7 +36,7 @@ func Update(i interface{}) error {
 
 func DeleteById(i interface{}, id int64) error {
 	if id == 0 {
-		return errors.New("id 为空！")
+		return errors.New("id is nil")
 	}
 	return config.DB.Delete(i, id).Error
 }

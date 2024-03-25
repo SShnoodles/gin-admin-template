@@ -54,3 +54,49 @@ func FindResourceByMethodAndPath(method, path string) (domain.Resource, error) {
 	}
 	return resource, nil
 }
+
+func FindResourcesByUserId(id int64) ([]domain.Resource, error) {
+	var resources []domain.Resource
+
+	var user domain.User
+	err := config.DB.First(&user, id).Error
+	if err != nil {
+		return resources, err
+	}
+
+	var roles []domain.UserRoleRelation
+	err = config.DB.Find(&roles, "user_id = ?", id).Error
+	if err != nil {
+		return resources, err
+	}
+	var roleIds []int64
+	for _, role := range roles {
+		roleIds = append(roleIds, role.RoleId)
+	}
+
+	var menus []domain.RoleMenuRelation
+	err = config.DB.Find(&menus, "role_id IN ?", roleIds).Error
+	if err != nil {
+		return resources, err
+	}
+	var menuIds []int64
+	for _, menu := range menus {
+		menuIds = append(menuIds, menu.MenuId)
+	}
+
+	var mrs []domain.MenuResourceRelation
+	err = config.DB.Find(&mrs, "menu_id IN ?", menuIds).Error
+	if err != nil {
+		return resources, err
+	}
+	var resourceIds []int64
+	for _, resource := range mrs {
+		resourceIds = append(resourceIds, resource.ResourceId)
+	}
+
+	err = config.DB.Find(&resources, "id IN ?", resourceIds).Error
+	if err != nil {
+		return resources, err
+	}
+	return resources, nil
+}

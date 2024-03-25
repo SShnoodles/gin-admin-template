@@ -3,9 +3,8 @@ package middleware
 import (
 	"context"
 	"gin-admin-template/internal/config"
-	"gin-admin-template/internal/domain"
+	"gin-admin-template/internal/service"
 	"github.com/gin-gonic/gin"
-	"net/http"
 	"strconv"
 	"time"
 )
@@ -24,7 +23,7 @@ func Limit(timesMax int) gin.HandlerFunc {
 		}
 		times, _ := strconv.Atoi(timesStr)
 		if times+1 > timesMax {
-			c.JSON(http.StatusBadRequest, domain.NewMessageWrapper("限制操作"))
+			service.UnauthorizedResult(c, "Error.unAuth")
 			c.Abort()
 			return
 		}

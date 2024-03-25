@@ -6,12 +6,13 @@ import (
 )
 
 type Config struct {
-	Server     Server
-	Logging    Logging
-	Datasource Datasource
-	Redis      Redis
-	Jwt        Jwt
-	Language   string
+	Server       Server
+	Logging      Logging
+	Datasource   Datasource
+	Redis        Redis
+	Jwt          Jwt
+	Language     string
+	Verification Verification
 }
 
 type Server struct {
@@ -38,6 +39,10 @@ type Datasource struct {
 type Jwt struct {
 	Secret string
 	Expire int
+}
+
+type Verification struct {
+	ResourceEnabled bool
 }
 
 type Redis struct {

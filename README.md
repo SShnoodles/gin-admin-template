@@ -2,7 +2,7 @@
 gin + gorm project template
 
 ## Feature Checklist
-* [ ] Resources
+* [x] Resources
 * [x] Menus
 * [x] Organizations
 * [x] Roles
@@ -29,6 +29,8 @@ datasource:
 jwt:
   secret: test
   expire: 7
+verification:
+  resourceEnabled: false
 redis:
   addr: localhost:6379
   password:
