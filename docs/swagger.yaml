@@ -60,6 +60,8 @@ definitions:
     properties:
       createdAt:
         type: string
+      enabled:
+        type: boolean
       id:
         example: "0"
         type: string
@@ -589,6 +591,24 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Update users 更新用户
+      tags:
+      - users 用户
+  /users/{id}/enabled:
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Enabled user 启用/禁用用户
       tags:
       - users 用户
   /users/{id}/roles:

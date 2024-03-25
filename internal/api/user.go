@@ -139,6 +139,7 @@ func CreateUser(c *gin.Context) {
 			WorkNo:   userAdd.WorkNo,
 			Password: password,
 			OrgId:    userAdd.OrgId,
+			Enabled:  true,
 		}
 		if err = tx.Create(&user).Error; err != nil {
 			return err
@@ -235,6 +236,34 @@ func UpdateUser(c *gin.Context) {
 		}
 		return nil
 	})
+	if err != nil {
+		service.BadRequestResult(c, "Failed.update", err)
+		return
+	}
+	c.JSON(http.StatusOK, service.UpdateSuccessResult())
+}
+
+// EnabledUser
+// @Summary Enabled user 启用/禁用用户
+// @Tags users 用户
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param id path string true "User ID"
+// @Router /users/{id}/enabled [put]
+func EnabledUser(c *gin.Context) {
+	userId, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		service.ParamBadRequestResult(c, err)
+		return
+	}
+	var user domain.User
+	err = service.FindById(&user, userId)
+	if err != nil {
+		service.BadRequestResult(c, "NotExist.user", err)
+		return
+	}
+	err = config.DB.Model(&user).UpdateColumn("enabled", !user.Enabled).Error
 	if err != nil {
 		service.BadRequestResult(c, "Failed.update", err)
 		return

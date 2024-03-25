@@ -48,6 +48,11 @@ func Auth() gin.HandlerFunc {
 			c.Abort()
 			return
 		}
+		if !user.Enabled {
+			service.UnauthorizedResult(c, "Error.unAuth")
+			c.Abort()
+			return
+		}
 		// Verify user resources
 		if config.AppConfig.Verification.ResourceEnabled {
 			resources, err := service.FindResourcesByUserId(userId)

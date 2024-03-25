@@ -11,6 +11,7 @@ type User struct {
 	WorkNo    string    `json:"workNo" gorm:"not null;size:50"`
 	Password  string    `json:"password" gorm:"not null;size:200"`
 	OrgId     int64     `json:"orgId,string"`
+	Enabled   bool      `json:"enabled" gorm:"not null"`
 	CreatedAt time.Time `json:"createdAt"`
 	UpdatedAt time.Time `json:"updatedAt"`
 }
