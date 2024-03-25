@@ -15,6 +15,31 @@ definitions:
     - password
     - username
     type: object
+  api.MenuAdd:
+    properties:
+      createdAt:
+        type: string
+      icon:
+        type: string
+      id:
+        example: "0"
+        type: string
+      name:
+        type: string
+      path:
+        type: string
+      pid:
+        example: "0"
+        type: string
+      resourceIds:
+        items:
+          type: string
+        type: array
+      sort:
+        type: integer
+      updatedAt:
+        type: string
+    type: object
   api.OrgAdd:
     properties:
       address:
@@ -83,27 +108,6 @@ definitions:
       workNo:
         type: string
     type: object
-  domain.Menu:
-    properties:
-      createdAt:
-        type: string
-      icon:
-        type: string
-      id:
-        example: "0"
-        type: string
-      name:
-        type: string
-      path:
-        type: string
-      pid:
-        example: "0"
-        type: string
-      sort:
-        type: integer
-      updatedAt:
-        type: string
-    type: object
 info:
   contact: {}
   title: Admin API
@@ -162,7 +166,7 @@ paths:
         name: data
         required: true
         schema:
-          $ref: '#/definitions/domain.Menu'
+          $ref: '#/definitions/api.MenuAdd'
       produces:
       - application/json
       responses: {}
@@ -220,13 +224,31 @@ paths:
         name: data
         required: true
         schema:
-          $ref: '#/definitions/domain.Menu'
+          $ref: '#/definitions/api.MenuAdd'
       produces:
       - application/json
       responses: {}
       security:
       - ApiKeyAuth: []
       summary: Update menu 更新菜单
+      tags:
+      - menus 菜单
+  /menus/{id}/resources:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: Menu ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Menu resources 获取菜单资源
       tags:
       - menus 菜单
   /orgs:

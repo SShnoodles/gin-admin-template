@@ -30,6 +30,16 @@ func GetResources(c *gin.Context) {
 		service.ParamBadRequestResult(c, err)
 		return
 	}
+	if q.PageSize == 0 {
+		var resources []domain.Resource
+		err = service.FindAll(&resources)
+		if err != nil {
+			service.BadRequestResult(c, "Failed.query", err)
+			return
+		}
+		c.JSON(http.StatusOK, resources)
+		return
+	}
 	page := service.Pagination(config.DB, q.PageIndex, q.PageSize, []domain.Resource{})
 	c.JSON(http.StatusOK, page)
 }

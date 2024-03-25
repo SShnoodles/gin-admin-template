@@ -58,6 +58,7 @@ func SetApiRouter(router *gin.Engine) {
 		menuRouter.POST("", api.CreateMenu)
 		menuRouter.PUT(":id", api.UpdateMenu)
 		menuRouter.DELETE(":id", api.DeleteMenu)
+		menuRouter.GET(":id/resources", api.GetMenuResources)
 	}
 	// resource
 	resourceRouter := router.Group("resources")

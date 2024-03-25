@@ -106,7 +106,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/domain.Menu"
+                            "$ref": "#/definitions/api.MenuAdd"
                         }
                     }
                 ],
@@ -171,7 +171,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/domain.Menu"
+                            "$ref": "#/definitions/api.MenuAdd"
                         }
                     }
                 ],
@@ -193,6 +193,35 @@ const docTemplate = `{
                     "menus 菜单"
                 ],
                 "summary": "Delete menu 删除菜单",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Menu ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {}
+            }
+        },
+        "/menus/{id}/resources": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "menus 菜单"
+                ],
+                "summary": "Menu resources 获取菜单资源",
                 "parameters": [
                     {
                         "type": "string",
@@ -871,6 +900,43 @@ const docTemplate = `{
                 }
             }
         },
+        "api.MenuAdd": {
+            "type": "object",
+            "properties": {
+                "createdAt": {
+                    "type": "string"
+                },
+                "icon": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string",
+                    "example": "0"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "path": {
+                    "type": "string"
+                },
+                "pid": {
+                    "type": "string",
+                    "example": "0"
+                },
+                "resourceIds": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "sort": {
+                    "type": "integer"
+                },
+                "updatedAt": {
+                    "type": "string"
+                }
+            }
+        },
         "api.OrgAdd": {
             "type": "object",
             "properties": {
@@ -968,37 +1034,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "workNo": {
-                    "type": "string"
-                }
-            }
-        },
-        "domain.Menu": {
-            "type": "object",
-            "properties": {
-                "createdAt": {
-                    "type": "string"
-                },
-                "icon": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string",
-                    "example": "0"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "path": {
-                    "type": "string"
-                },
-                "pid": {
-                    "type": "string",
-                    "example": "0"
-                },
-                "sort": {
-                    "type": "integer"
-                },
-                "updatedAt": {
                     "type": "string"
                 }
             }
