@@ -53,6 +53,10 @@ func Auth() gin.HandlerFunc {
 			c.Abort()
 			return
 		}
+		// ignore super admin
+		if user.Username == "superadmin" {
+			return
+		}
 		// Verify user resources
 		if config.AppConfig.Verification.ResourceEnabled {
 			resources, err := service.FindResourcesByUserId(userId)

@@ -1,6 +1,8 @@
 # Gin template
 gin + gorm project template
 
+[Example Frontend(zh-CN)](https://github.com/SShnoodles/gin-admin-frontend-template)
+
 ## Feature Checklist
 * [x] Resources
 * [x] Menus
