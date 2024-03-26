@@ -40,7 +40,8 @@ func GetUsers(c *gin.Context) {
 	var q UserQuery
 	err := c.ShouldBindQuery(&q)
 	if err != nil {
-		service.ParamBadRequestResult(c, err)
+		service.ParamBadRequestResult(c)
+		config.Log.Error(err.Error())
 		return
 	}
 	page := service.Pagination(config.DB, q.PageIndex, q.PageSize, []domain.User{})
@@ -72,13 +73,15 @@ func GetUsers(c *gin.Context) {
 func GetUser(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
-		service.ParamBadRequestResult(c, err)
+		service.ParamBadRequestResult(c)
+		config.Log.Error(err.Error())
 		return
 	}
 	var user domain.User
 	err = service.FindById(&user, id)
 	if err != nil {
-		service.BadRequestResult(c, "Failed.query", err)
+		service.BadRequestResult(c, "Failed.query")
+		config.Log.Error(err.Error())
 		return
 	}
 	user.Password = ""
@@ -97,12 +100,14 @@ func GetUser(c *gin.Context) {
 func GetUserRoles(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
-		service.ParamBadRequestResult(c, err)
+		service.ParamBadRequestResult(c)
+		config.Log.Error(err.Error())
 		return
 	}
 	roles, err := service.FindRoleIdsByUserId(id)
 	if err != nil {
-		service.BadRequestResult(c, "Failed.query", err)
+		service.BadRequestResult(c, "Failed.query")
+		config.Log.Error(err.Error())
 		return
 	}
 	c.JSON(http.StatusOK, roles)
@@ -120,12 +125,14 @@ func CreateUser(c *gin.Context) {
 	var userAdd UserAdd
 	err := c.ShouldBindJSON(&userAdd)
 	if err != nil {
-		service.ParamBadRequestResult(c, err)
+		service.ParamBadRequestResult(c)
+		config.Log.Error(err.Error())
 		return
 	}
 	user, _ := service.FindUserByUsername(userAdd.Username)
 	if user != (domain.User{}) {
-		service.BadRequestResult(c, "Existed.user", err)
+		service.BadRequestResult(c, "Existed.user")
+		config.Log.Error(err.Error())
 		return
 	}
 
@@ -162,7 +169,8 @@ func CreateUser(c *gin.Context) {
 		return nil
 	})
 	if err != nil {
-		service.ParamBadRequestResult(c, err)
+		service.ParamBadRequestResult(c)
+		config.Log.Error(err.Error())
 		return
 	}
 	c.JSON(http.StatusOK, domain.NewIdWrapper(userId))
@@ -180,19 +188,22 @@ func CreateUser(c *gin.Context) {
 func UpdateUser(c *gin.Context) {
 	userId, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
-		service.ParamBadRequestResult(c, err)
+		service.ParamBadRequestResult(c)
+		config.Log.Error(err.Error())
 		return
 	}
 	var userAdd UserAdd
 	err = c.ShouldBindJSON(&userAdd)
 	if err != nil {
-		service.ParamBadRequestResult(c, err)
+		service.ParamBadRequestResult(c)
+		config.Log.Error(err.Error())
 		return
 	}
 	var user domain.User
 	err = service.FindById(&user, userId)
 	if err != nil {
-		service.BadRequestResult(c, "NotExist.user", err)
+		service.BadRequestResult(c, "NotExist.user")
+		config.Log.Error(err.Error())
 		return
 	}
 	if user.Username != userAdd.Username {
@@ -237,7 +248,8 @@ func UpdateUser(c *gin.Context) {
 		return nil
 	})
 	if err != nil {
-		service.BadRequestResult(c, "Failed.update", err)
+		service.BadRequestResult(c, "Failed.update")
+		config.Log.Error(err.Error())
 		return
 	}
 	c.JSON(http.StatusOK, service.UpdateSuccessResult())
@@ -254,18 +266,21 @@ func UpdateUser(c *gin.Context) {
 func EnabledUser(c *gin.Context) {
 	userId, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
-		service.ParamBadRequestResult(c, err)
+		service.ParamBadRequestResult(c)
+		config.Log.Error(err.Error())
 		return
 	}
 	var user domain.User
 	err = service.FindById(&user, userId)
 	if err != nil {
-		service.BadRequestResult(c, "NotExist.user", err)
+		service.BadRequestResult(c, "NotExist.user")
+		config.Log.Error(err.Error())
 		return
 	}
 	err = config.DB.Model(&user).UpdateColumn("enabled", !user.Enabled).Error
 	if err != nil {
-		service.BadRequestResult(c, "Failed.update", err)
+		service.BadRequestResult(c, "Failed.update")
+		config.Log.Error(err.Error())
 		return
 	}
 	c.JSON(http.StatusOK, service.UpdateSuccessResult())
@@ -282,14 +297,16 @@ func EnabledUser(c *gin.Context) {
 func DeleteUser(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
-		service.ParamBadRequestResult(c, err)
+		service.ParamBadRequestResult(c)
+		config.Log.Error(err.Error())
 		return
 	}
 
 	var user domain.User
 	err = service.FindById(&user, id)
 	if err != nil {
-		service.BadRequestResult(c, "NotExist.user", err)
+		service.BadRequestResult(c, "NotExist.user")
+		config.Log.Error(err.Error())
 		return
 	}
 	err = config.DB.Transaction(func(tx *gorm.DB) error {
@@ -303,7 +320,8 @@ func DeleteUser(c *gin.Context) {
 	})
 
 	if err != nil {
-		service.BadRequestResult(c, "Failed.delete", err)
+		service.BadRequestResult(c, "Failed.delete")
+		config.Log.Error(err.Error())
 		return
 	}
 	c.JSON(http.StatusOK, service.DeleteSuccessResult())

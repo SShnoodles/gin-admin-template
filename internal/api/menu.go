@@ -36,13 +36,15 @@ func GetMenus(c *gin.Context) {
 	var q MenuQuery
 	err := c.ShouldBindQuery(&q)
 	if err != nil {
-		service.ParamBadRequestResult(c, err)
+		service.ParamBadRequestResult(c)
+		config.Log.Error(err.Error())
 		return
 	}
 	var menus []domain.Menu
 	err = service.FindAll(&menus)
 	if err != nil {
-		service.BadRequestResult(c, "Failed.query", err)
+		service.BadRequestResult(c, "Failed.query")
+		config.Log.Error(err.Error())
 		return
 	}
 	var menuTree []*MenuTree
@@ -77,13 +79,15 @@ func buildTree(menuTree []*MenuTree, pid int64) []*MenuTree {
 func GetMenu(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
-		service.ParamBadRequestResult(c, err)
+		service.ParamBadRequestResult(c)
+		config.Log.Error(err.Error())
 		return
 	}
 	var menu domain.Menu
 	err = service.FindById(&menu, id)
 	if err != nil {
-		service.BadRequestResult(c, "Failed.query", err)
+		service.BadRequestResult(c, "Failed.query")
+		config.Log.Error(err.Error())
 		return
 	}
 	c.JSON(http.StatusOK, menu)
@@ -100,12 +104,14 @@ func GetMenu(c *gin.Context) {
 func GetMenuResources(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
-		service.ParamBadRequestResult(c, err)
+		service.ParamBadRequestResult(c)
+		config.Log.Error(err.Error())
 		return
 	}
 	resourceIds, err := service.FindResourceIdsByMenuId(id)
 	if err != nil {
-		service.BadRequestResult(c, "Failed.query", err)
+		service.BadRequestResult(c, "Failed.query")
+		config.Log.Error(err.Error())
 		return
 	}
 	c.JSON(http.StatusOK, resourceIds)
@@ -123,7 +129,8 @@ func CreateMenu(c *gin.Context) {
 	var menuAdd MenuAdd
 	err := c.ShouldBindJSON(&menuAdd)
 	if err != nil {
-		service.ParamBadRequestResult(c, err)
+		service.ParamBadRequestResult(c)
+		config.Log.Error(err.Error())
 		return
 	}
 	_, err = service.FindMenuByPath(menuAdd.Path)
@@ -157,7 +164,8 @@ func CreateMenu(c *gin.Context) {
 		return nil
 	})
 	if err != nil {
-		service.BadRequestResult(c, "Failed.create", err)
+		service.BadRequestResult(c, "Failed.create")
+		config.Log.Error(err.Error())
 		return
 	}
 	c.JSON(http.StatusOK, domain.NewIdWrapper(menuId))
@@ -175,19 +183,22 @@ func CreateMenu(c *gin.Context) {
 func UpdateMenu(c *gin.Context) {
 	menuId, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
-		service.ParamBadRequestResult(c, err)
+		service.ParamBadRequestResult(c)
+		config.Log.Error(err.Error())
 		return
 	}
 	var menuAdd MenuAdd
 	err = c.ShouldBindJSON(&menuAdd)
 	if err != nil {
-		service.ParamBadRequestResult(c, err)
+		service.ParamBadRequestResult(c)
+		config.Log.Error(err.Error())
 		return
 	}
 	var menu domain.Menu
 	err = service.FindById(&menu, menuAdd.Id)
 	if err != nil {
-		service.BadRequestResult(c, "NotExist.org", err)
+		service.BadRequestResult(c, "NotExist.org")
+		config.Log.Error(err.Error())
 		return
 	}
 	if menuAdd.Path != menu.Path {
@@ -229,7 +240,8 @@ func UpdateMenu(c *gin.Context) {
 		return nil
 	})
 	if err != nil {
-		service.BadRequestResult(c, "Failed.update", err)
+		service.BadRequestResult(c, "Failed.update")
+		config.Log.Error(err.Error())
 		return
 	}
 	c.JSON(http.StatusOK, service.UpdateSuccessResult())
@@ -246,7 +258,8 @@ func UpdateMenu(c *gin.Context) {
 func DeleteMenu(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
-		service.ParamBadRequestResult(c, err)
+		service.ParamBadRequestResult(c)
+		config.Log.Error(err.Error())
 		return
 	}
 	err = config.DB.Transaction(func(tx *gorm.DB) error {
@@ -262,7 +275,8 @@ func DeleteMenu(c *gin.Context) {
 		return nil
 	})
 	if err != nil {
-		service.BadRequestResult(c, "Failed.delete", err)
+		service.BadRequestResult(c, "Failed.delete")
+		config.Log.Error(err.Error())
 		return
 	}
 	c.JSON(http.StatusOK, service.DeleteSuccessResult())

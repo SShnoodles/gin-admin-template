@@ -27,14 +27,16 @@ func GetResources(c *gin.Context) {
 	var q ResourceQuery
 	err := c.ShouldBindQuery(&q)
 	if err != nil {
-		service.ParamBadRequestResult(c, err)
+		service.ParamBadRequestResult(c)
+		config.Log.Error(err.Error())
 		return
 	}
 	if q.PageSize == 0 {
 		var resources []domain.Resource
 		err = service.FindAll(&resources)
 		if err != nil {
-			service.BadRequestResult(c, "Failed.query", err)
+			service.BadRequestResult(c, "Failed.query")
+			config.Log.Error(err.Error())
 			return
 		}
 		c.JSON(http.StatusOK, resources)

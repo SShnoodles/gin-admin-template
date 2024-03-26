@@ -1,6 +1,7 @@
 package api
 
 import (
+	"gin-admin-template/internal/config"
 	"gin-admin-template/internal/domain"
 	"gin-admin-template/internal/middleware"
 	"gin-admin-template/internal/service"
@@ -35,7 +36,8 @@ func Login(c *gin.Context) {
 	var login LoginInfo
 	err := c.ShouldBindJSON(&login)
 	if err != nil {
-		service.ParamBadRequestResult(c, err)
+		service.ParamBadRequestResult(c)
+		config.Log.Error(err.Error())
 		return
 	}
 	msg := middleware.ValidateParam(&login)
@@ -79,7 +81,8 @@ func Captcha(c *gin.Context) {
 	captcha := base64Captcha.NewCaptcha(driver, base64Captcha.DefaultMemStore)
 	id, b64s, _, err := captcha.Generate()
 	if err != nil {
-		service.BadRequestResult(c, "Failed.create", err)
+		service.BadRequestResult(c, "Failed.create")
+		config.Log.Error(err.Error())
 		return
 	}
 	var result = make(map[string]string)

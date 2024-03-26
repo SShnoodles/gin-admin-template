@@ -38,7 +38,8 @@ func GetRoles(c *gin.Context) {
 	var q RoleQuery
 	err := c.ShouldBindQuery(&q)
 	if err != nil {
-		service.ParamBadRequestResult(c, err)
+		service.ParamBadRequestResult(c)
+		config.Log.Error(err.Error())
 		return
 	}
 	page := service.Pagination(config.DB, q.PageIndex, q.PageSize, []domain.Role{})
@@ -69,13 +70,15 @@ func GetRoles(c *gin.Context) {
 func GetRole(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
-		service.ParamBadRequestResult(c, err)
+		service.ParamBadRequestResult(c)
+		config.Log.Error(err.Error())
 		return
 	}
 	var role domain.Role
 	err = service.FindById(&role, id)
 	if err != nil {
-		service.BadRequestResult(c, "Failed.query", err)
+		service.BadRequestResult(c, "Failed.query")
+		config.Log.Error(err.Error())
 		return
 	}
 	c.JSON(http.StatusOK, role)
@@ -92,12 +95,14 @@ func GetRole(c *gin.Context) {
 func GetRoleMenus(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
-		service.ParamBadRequestResult(c, err)
+		service.ParamBadRequestResult(c)
+		config.Log.Error(err.Error())
 		return
 	}
 	menusIds, err := service.FindMenuIdsByRoleId(id)
 	if err != nil {
-		service.BadRequestResult(c, "Failed.query", err)
+		service.BadRequestResult(c, "Failed.query")
+		config.Log.Error(err.Error())
 		return
 	}
 	c.JSON(http.StatusOK, menusIds)
@@ -114,12 +119,14 @@ func GetRoleMenus(c *gin.Context) {
 func GetOrgRoles(c *gin.Context) {
 	orgId, err := strconv.ParseInt(c.Param("orgId"), 10, 64)
 	if err != nil {
-		service.ParamBadRequestResult(c, err)
+		service.ParamBadRequestResult(c)
+		config.Log.Error(err.Error())
 		return
 	}
 	roles, err := service.FindRolesByOrgId(orgId)
 	if err != nil {
-		service.BadRequestResult(c, "Failed.query", err)
+		service.BadRequestResult(c, "Failed.query")
+		config.Log.Error(err.Error())
 		return
 	}
 	c.JSON(http.StatusOK, roles)
@@ -137,7 +144,8 @@ func CreateRole(c *gin.Context) {
 	var roleAdd RoleAdd
 	err := c.ShouldBindJSON(&roleAdd)
 	if err != nil {
-		service.ParamBadRequestResult(c, err)
+		service.ParamBadRequestResult(c)
+		config.Log.Error(err.Error())
 		return
 	}
 	roleId := config.IdGenerate()
@@ -168,7 +176,8 @@ func CreateRole(c *gin.Context) {
 		return nil
 	})
 	if err != nil {
-		service.BadRequestResult(c, "Failed.create", err)
+		service.BadRequestResult(c, "Failed.create")
+		config.Log.Error(err.Error())
 		return
 	}
 	c.JSON(http.StatusOK, domain.NewIdWrapper(roleId))
@@ -186,19 +195,22 @@ func CreateRole(c *gin.Context) {
 func UpdateRole(c *gin.Context) {
 	roleId, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
-		service.ParamBadRequestResult(c, err)
+		service.ParamBadRequestResult(c)
+		config.Log.Error(err.Error())
 		return
 	}
 	var roleAdd RoleAdd
 	err = c.ShouldBindJSON(&roleAdd)
 	if err != nil {
-		service.ParamBadRequestResult(c, err)
+		service.ParamBadRequestResult(c)
+		config.Log.Error(err.Error())
 		return
 	}
 	var role domain.Role
 	err = service.FindById(&role, roleId)
 	if err != nil {
-		service.BadRequestResult(c, "NotExist.role", err)
+		service.BadRequestResult(c, "NotExist.role")
+		config.Log.Error(err.Error())
 		return
 	}
 	if roleAdd.Code != role.Code {
@@ -242,7 +254,8 @@ func UpdateRole(c *gin.Context) {
 		return nil
 	})
 	if err != nil {
-		service.BadRequestResult(c, "Failed.update", err)
+		service.BadRequestResult(c, "Failed.update")
+		config.Log.Error(err.Error())
 		return
 	}
 	c.JSON(http.StatusOK, service.UpdateSuccessResult())
@@ -259,13 +272,15 @@ func UpdateRole(c *gin.Context) {
 func DeleteRole(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
-		service.ParamBadRequestResult(c, err)
+		service.ParamBadRequestResult(c)
+		config.Log.Error(err.Error())
 		return
 	}
 	var role domain.Role
 	err = service.FindById(&role, id)
 	if err != nil {
-		service.BadRequestResult(c, "NotExist.role", err)
+		service.BadRequestResult(c, "NotExist.role")
+		config.Log.Error(err.Error())
 		return
 	}
 	err = config.DB.Transaction(func(tx *gorm.DB) error {
@@ -278,7 +293,8 @@ func DeleteRole(c *gin.Context) {
 		return nil
 	})
 	if err != nil {
-		service.BadRequestResult(c, "Failed.delete", err)
+		service.BadRequestResult(c, "Failed.delete")
+		config.Log.Error(err.Error())
 		return
 	}
 	c.JSON(http.StatusOK, service.DeleteSuccessResult())

@@ -16,7 +16,7 @@ import (
 )
 
 // @title           Admin API
-// @version         1.0
+// @version         1.0.0
 // @securityDefinitions.apikey ApiKeyAuth
 // @in header
 // @name Authorization

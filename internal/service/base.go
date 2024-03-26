@@ -75,16 +75,14 @@ func Pagination[T any](db *gorm.DB, page int, size int, out []T) PagedResult[T] 
 	}
 }
 
-func ParamBadRequestResult(c *gin.Context, err error) {
+func ParamBadRequestResult(c *gin.Context) {
 	localize, _ := config.I18nLoc.LocalizeMessage(&i18n.Message{ID: "Error.param"})
 	c.String(http.StatusBadRequest, localize)
-	config.Log.Error(err.Error())
 }
 
-func BadRequestResult(c *gin.Context, messageId string, err error) {
+func BadRequestResult(c *gin.Context, messageId string) {
 	localize, _ := config.I18nLoc.LocalizeMessage(&i18n.Message{ID: messageId})
 	c.String(http.StatusBadRequest, localize)
-	config.Log.Error(err.Error())
 }
 
 func UnauthorizedResult(c *gin.Context, messageId string) {
