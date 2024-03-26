@@ -1,9 +1,24 @@
 # Gin template
 gin + gorm project template
 
+[![Language](https://img.shields.io/badge/Language-Go-blue.svg)](https://golang.org/)
+[![GitHub release](https://img.shields.io/github/tag/SShnoodles/gin-admin-template.svg?label=release)](https://github.com/SShnoodles/gin-admin-template/releases)
+[![LICENSE](https://img.shields.io/github/license/SShnoodles/gin-admin-template.svg)](https://github.com/SShnoodles/gin-admin-template/blob/main/LICENSE)
+
+## Frontend
 [Example Frontend(zh-CN)](https://github.com/SShnoodles/gin-admin-frontend-template)
 
-## Feature Checklist
+## Features
+* **Multi** organizational permission design
+* **Restful** API design
+* Database repository **Gorm**
+* Log repository **zap**
+* Base authentication **JWT**
+* Api Docs repository **Swagger**
+* Return result message based on **i18n**
+* Configuration file repository **viper**
+
+## Interface List
 * [x] Resources
 * [x] Menus
 * [x] Organizations
