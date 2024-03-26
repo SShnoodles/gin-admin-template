@@ -134,7 +134,7 @@ func CreateOrg(c *gin.Context) {
 		if err = tx.Create(&org).Error; err != nil {
 			return err
 		}
-		if orgAdd.MenuIds != nil {
+		if len(orgAdd.MenuIds) > 0 {
 			var omr []domain.OrgMenuRelation
 			for _, id := range orgAdd.MenuIds {
 				menuId, _ := strconv.ParseInt(id, 10, 64)
@@ -212,7 +212,7 @@ func UpdateOrg(c *gin.Context) {
 				return err
 			}
 		}
-		if orgAdd.MenuIds != nil {
+		if len(orgAdd.MenuIds) > 0 {
 			var omr []domain.OrgMenuRelation
 			for _, id := range orgAdd.MenuIds {
 				menuId, _ := strconv.ParseInt(id, 10, 64)

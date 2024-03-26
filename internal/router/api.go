@@ -25,6 +25,7 @@ func SetApiRouter(router *gin.Engine) {
 		usersRouter.DELETE(":id", api.DeleteUser)
 		usersRouter.GET(":id/roles", api.GetUserRoles)
 		usersRouter.PUT(":id/enabled", api.EnabledUser)
+		usersRouter.PUT("change-password", api.ChangeUserPassword)
 	}
 	// org
 	orgsRouter := router.Group("orgs")

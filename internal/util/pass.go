@@ -2,6 +2,8 @@ package util
 
 import "golang.org/x/crypto/bcrypt"
 
+const DefaultPassword = "123456"
+
 func EncryptedPassword(password string) (string, error) {
 	passwordBytes := []byte(password)
 	hashedPassword, err := bcrypt.GenerateFromPassword(passwordBytes, bcrypt.DefaultCost)

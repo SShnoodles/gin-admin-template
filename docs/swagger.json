@@ -3,7 +3,7 @@
     "info": {
         "title": "Admin API",
         "contact": {},
-        "version": "1.0"
+        "version": "1.0.0"
     },
     "paths": {
         "/login/account": {
@@ -716,6 +716,44 @@
                 "responses": {}
             }
         },
+        "/users/change-password": {
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users 用户"
+                ],
+                "summary": "Change user password 修改用户密码",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "User password 用户密码",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.UserPassword"
+                        }
+                    }
+                ],
+                "responses": {}
+            }
+        },
         "/users/{id}": {
             "get": {
                 "security": [
@@ -1025,6 +1063,17 @@
                     "type": "string"
                 },
                 "workNo": {
+                    "type": "string"
+                }
+            }
+        },
+        "api.UserPassword": {
+            "type": "object",
+            "properties": {
+                "newPassword": {
+                    "type": "string"
+                },
+                "oldPassword": {
                     "type": "string"
                 }
             }

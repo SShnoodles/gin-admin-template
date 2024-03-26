@@ -108,10 +108,17 @@ definitions:
       workNo:
         type: string
     type: object
+  api.UserPassword:
+    properties:
+      newPassword:
+        type: string
+      oldPassword:
+        type: string
+    type: object
 info:
   contact: {}
   title: Admin API
-  version: "1.0"
+  version: 1.0.0
 paths:
   /login/account:
     post:
@@ -649,6 +656,30 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: User roles 获取用户角色
+      tags:
+      - users 用户
+  /users/change-password:
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: User password 用户密码
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/api.UserPassword'
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Change user password 修改用户密码
       tags:
       - users 用户
 securityDefinitions:

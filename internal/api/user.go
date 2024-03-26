@@ -28,6 +28,11 @@ type UserOrg struct {
 	OrgName string `json:"orgName"`
 }
 
+type UserPassword struct {
+	OldPassword string `form:"oldPassword"`
+	NewPassword string `form:"newPassword"`
+}
+
 // GetUsers
 // @Summary List users 用户列表
 // @Tags users 用户
@@ -138,7 +143,7 @@ func CreateUser(c *gin.Context) {
 
 	userId := config.IdGenerate()
 	err = config.DB.Transaction(func(tx *gorm.DB) error {
-		password, _ := util.EncryptedPassword(userAdd.Password)
+		password, _ := util.EncryptedPassword(util.DefaultPassword)
 		user := domain.User{
 			Id:       userId,
 			Username: userAdd.Username,
@@ -151,7 +156,7 @@ func CreateUser(c *gin.Context) {
 		if err = tx.Create(&user).Error; err != nil {
 			return err
 		}
-		if userAdd.RoleIds != nil {
+		if len(userAdd.RoleIds) > 0 {
 			var urr []domain.UserRoleRelation
 			for _, id := range userAdd.RoleIds {
 				roleId, _ := strconv.ParseInt(id, 10, 64)
@@ -215,7 +220,6 @@ func UpdateUser(c *gin.Context) {
 	}
 	err = config.DB.Transaction(func(tx *gorm.DB) error {
 		user.Username = userAdd.Username
-		user.Password = userAdd.Password
 		user.RealName = userAdd.RealName
 		user.WorkNo = userAdd.WorkNo
 		user.OrgId = userAdd.OrgId
@@ -232,18 +236,20 @@ func UpdateUser(c *gin.Context) {
 			}
 		}
 
-		var urr []domain.UserRoleRelation
-		for _, id := range userAdd.RoleIds {
-			roleId, _ := strconv.ParseInt(id, 10, 64)
-			urr = append(urr, domain.UserRoleRelation{
-				Id:     config.IdGenerate(),
-				UserId: userId,
-				RoleId: roleId,
-				OrgId:  userAdd.OrgId,
-			})
-		}
-		if err = tx.Create(&urr).Error; err != nil {
-			return err
+		if len(userAdd.RoleIds) > 0 {
+			var urr []domain.UserRoleRelation
+			for _, id := range userAdd.RoleIds {
+				roleId, _ := strconv.ParseInt(id, 10, 64)
+				urr = append(urr, domain.UserRoleRelation{
+					Id:     config.IdGenerate(),
+					UserId: userId,
+					RoleId: roleId,
+					OrgId:  userAdd.OrgId,
+				})
+			}
+			if err = tx.Create(&urr).Error; err != nil {
+				return err
+			}
 		}
 		return nil
 	})
@@ -278,6 +284,48 @@ func EnabledUser(c *gin.Context) {
 		return
 	}
 	err = config.DB.Model(&user).UpdateColumn("enabled", !user.Enabled).Error
+	if err != nil {
+		service.BadRequestResult(c, "Failed.update")
+		config.Log.Error(err.Error())
+		return
+	}
+	c.JSON(http.StatusOK, service.UpdateSuccessResult())
+}
+
+// ChangeUserPassword
+// @Summary Change user password 修改用户密码
+// @Tags users 用户
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param id path string true "User ID"
+// @Param data body UserPassword true "User password 用户密码"
+// @Router /users/change-password [put]
+func ChangeUserPassword(c *gin.Context) {
+	userId := c.GetInt64("UserId")
+
+	var userPassword UserPassword
+	err := c.ShouldBindJSON(&userPassword)
+	if err != nil {
+		service.ParamBadRequestResult(c)
+		config.Log.Error(err.Error())
+		return
+	}
+
+	var user domain.User
+	err = service.FindById(&user, userId)
+	if err != nil {
+		service.BadRequestResult(c, "NotExist.user")
+		config.Log.Error(err.Error())
+		return
+	}
+	isRight := util.VerifyPassword(userPassword.OldPassword, user.Password)
+	if !isRight {
+		service.BadRequestResult(c, "Error.password")
+		return
+	}
+	password, _ := util.EncryptedPassword(userPassword.NewPassword)
+	err = config.DB.Model(&user).UpdateColumn("password", password).Error
 	if err != nil {
 		service.BadRequestResult(c, "Failed.update")
 		config.Log.Error(err.Error())
