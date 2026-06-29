@@ -6,7 +6,7 @@ gin + gorm project template
 [![LICENSE](https://img.shields.io/github/license/SShnoodles/gin-admin-template.svg)](https://github.com/SShnoodles/gin-admin-template/blob/main/LICENSE)
 
 ## Frontend
-[Example Frontend(zh-CN)](https://github.com/SShnoodles/gin-admin-frontend-template)
+[web](https://github.com/SShnoodles/gin-admin-template/tree/main/web)
 
 ## Features
 * **Multi** organizational permission design

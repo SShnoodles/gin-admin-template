@@ -6,13 +6,14 @@ import (
 	"gin-admin-template/internal/config"
 	"gin-admin-template/internal/router"
 	"gin-admin-template/internal/service"
+	"os"
+	"strconv"
+	"time"
+
 	ginzap "github.com/gin-contrib/zap"
 	"github.com/gin-gonic/gin"
 	swaggerfiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
-	"os"
-	"strconv"
-	"time"
 )
 
 // @title           Admin API
@@ -34,6 +35,14 @@ func main() {
 	dir, _ := os.Getwd()
 	r.Static("/assets", dir+"/web/dist/assets")
 	r.GET("/", api.HtmlHandler)
+
+	err := service.InitAdminUser()
+	if err != nil {
+		config.Log.Errorf("Failed to initialize superadmin: %v", err)
+		return
+	} else {
+		config.Log.Info("superadmin initialized successfully")
+	}
 
 	config.Log.Infof("Listening on %d", config.AppConfig.Server.Port)
 	r.Run(":" + strconv.Itoa(config.AppConfig.Server.Port))

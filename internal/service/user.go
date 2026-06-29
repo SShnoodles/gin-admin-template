@@ -43,3 +43,33 @@ func FindRoleIdsByUserId(id int64) ([]string, error) {
 	}
 	return ids, nil
 }
+
+func InitAdminUser() error {
+	var user domain.User
+	err := config.DB.First(&user, "username = ?", "admin").Error
+	if err != nil {
+		if err.Error() == "record not found" {
+			password, err := util.EncryptedPassword(util.DefaultPassword)
+			if err != nil {
+				return err
+			}
+			user = domain.User{
+				Id:       config.IdGenerate(),
+				Username: "superadmin",
+				Password: password,
+				RealName: "Administrator",
+				Enabled:  true,
+			}
+			err = config.DB.Create(&user).Error
+			if err != nil {
+				return err
+			}
+		} else {
+			return err
+		}
+	}
+	if !user.Enabled {
+		return config.DB.Model(&user).UpdateColumn("enabled", true).Error
+	}
+	return nil
+}
