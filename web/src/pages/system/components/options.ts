@@ -1,6 +1,8 @@
-import type { DataNode } from 'antd/es/tree';
+import type { TreeSelectProps } from 'antd';
 import { getMenus, getOrgRoles, getOrgs, getResources, getRoles } from '@/services/admin';
 import type { Id, Menu, Org, Resource, Role } from '@/services/admin/types';
+
+type TreeSelectDataNode = NonNullable<TreeSelectProps['treeData']>[number];
 
 export type SelectOption = {
   label: string;
@@ -11,17 +13,43 @@ export const normalizeList = <T,>(result: T[] | { data?: T[] }) => {
   return Array.isArray(result) ? result : result.data || [];
 };
 
-export const toMenuTreeData = (menus: Menu[] = []): DataNode[] => {
+export const toMenuTreeData = (menus: Menu[] = []): TreeSelectDataNode[] => {
   return menus.map((menu) => ({
     title: menu.name || menu.path || menu.id,
+    label: menu.name || menu.path || menu.id,
     key: String(menu.id),
     value: String(menu.id),
     children: toMenuTreeData(menu.children || []),
   }));
 };
 
-export const flattenMenus = (menus: Menu[] = []): Menu[] => {
-  return menus.flatMap((menu) => [menu, ...flattenMenus(menu.children || [])]);
+export const toParentMenuTreeData = (menus: Menu[] = [], currentId?: Id): TreeSelectDataNode[] => {
+  const buildNode = (menu: Menu): TreeSelectDataNode | null => {
+    if (currentId && String(menu.id) === String(currentId)) {
+      return null;
+    }
+
+    return {
+      title: menu.name || menu.path || menu.id,
+      label: menu.name || menu.path || menu.id,
+      key: String(menu.id),
+      value: String(menu.id),
+      children: (menu.children || [])
+        .map(buildNode)
+        .filter((item): item is TreeSelectDataNode => Boolean(item)),
+    };
+  };
+
+  return [
+    {
+      title: '顶级菜单',
+      label: '顶级菜单',
+      key: '0',
+      value: '0',
+      isLeaf: true,
+    },
+    ...menus.map(buildNode).filter((item): item is TreeSelectDataNode => Boolean(item)),
+  ];
 };
 
 export async function loadOrgOptions(): Promise<SelectOption[]> {
@@ -53,15 +81,7 @@ export async function loadMenuTreeData() {
   return toMenuTreeData(menus);
 }
 
-export async function loadParentMenuOptions(currentId?: Id): Promise<SelectOption[]> {
-  const menus = flattenMenus(await getMenus()).filter(
-    (menu) => String(menu.id) !== String(currentId),
-  );
-  return [
-    { label: '顶级菜单', value: '0' },
-    ...menus.map((menu) => ({
-      label: menu.name || menu.path || String(menu.id),
-      value: String(menu.id),
-    })),
-  ];
+export async function loadParentMenuTreeData(currentId?: Id) {
+  const menus = await getMenus();
+  return toParentMenuTreeData(menus, currentId);
 }

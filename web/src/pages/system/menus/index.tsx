@@ -5,6 +5,7 @@ import {
   ProFormDigit,
   ProFormSelect,
   ProFormText,
+  ProFormTreeSelect,
   ProTable,
 } from '@ant-design/pro-components';
 import type { ActionType, ProColumns } from '@ant-design/pro-components';
@@ -18,22 +19,26 @@ import {
   updateMenu,
 } from '@/services/admin';
 import type { Id, Menu } from '@/services/admin/types';
-import { loadParentMenuOptions, loadResourceOptions } from '../components/options';
+import { loadParentMenuTreeData, loadResourceOptions } from '../components/options';
 
-type MenuForm = Menu & { resourceIds?: Id[] };
+type MenuForm = Menu & { parentName?: string; resourceIds?: Id[] };
 
 const MenuPage = () => {
   const actionRef = useRef<ActionType>(undefined);
   const { message } = App.useApp();
   const [open, setOpen] = useState(false);
   const [current, setCurrent] = useState<MenuForm>();
+  const [parentLocked, setParentLocked] = useState(false);
+  const formKey = `${current?.id || 'create'}-${current?.pid || '0'}-${parentLocked}`;
 
   const openForm = async (record?: Menu) => {
     if (record?.id) {
       const resourceIds = await getMenuResources(record.id);
       setCurrent({ ...record, resourceIds: resourceIds.map(String) });
+      setParentLocked(false);
     } else {
-      setCurrent({ pid: '0', sort: 0 });
+      setCurrent({ parentName: '顶级菜单', pid: '0', sort: 0 });
+      setParentLocked(true);
     }
     setOpen(true);
   };
@@ -48,10 +53,19 @@ const MenuPage = () => {
       title: '操作',
       valueType: 'option',
       render: (_, record) => [
-        <Button key="addChild" type="link" onClick={() => {
-          setCurrent({ pid: record.id, sort: 0 });
-          setOpen(true);
-        }}>
+        <Button
+          key="addChild"
+          type="link"
+          onClick={() => {
+            setCurrent({
+              parentName: record.name || record.path || String(record.id),
+              pid: record.id,
+              sort: 0,
+            });
+            setParentLocked(true);
+            setOpen(true);
+          }}
+        >
           添加下级
         </Button>,
         <Button key="edit" type="link" onClick={() => openForm(record)}>
@@ -94,15 +108,17 @@ const MenuPage = () => {
         ]}
       />
       <ModalForm<MenuForm>
+        key={formKey}
         title={current?.id ? '编辑菜单' : '新建菜单'}
         open={open}
         modalProps={{ destroyOnHidden: true, onCancel: () => setOpen(false) }}
         initialValues={current}
         onFinish={async (values) => {
+          const payload = parentLocked ? { ...values, pid: current?.pid } : values;
           if (current?.id) {
-            await updateMenu(current.id, { ...current, ...values });
+            await updateMenu(current.id, { ...current, ...payload });
           } else {
-            await createMenu(values);
+            await createMenu(payload);
           }
           message.success('保存成功');
           setOpen(false);
@@ -111,12 +127,22 @@ const MenuPage = () => {
         }}
       >
         <ProFormText name="name" label="菜单名称" rules={[{ required: true }]} />
-        <ProFormSelect
-          name="pid"
-          label="上级菜单"
-          rules={[{ required: true }]}
-          request={() => loadParentMenuOptions(current?.id)}
-        />
+        {parentLocked ? (
+          <ProFormText name="parentName" label="上级菜单" disabled />
+        ) : (
+          <ProFormTreeSelect
+            name="pid"
+            label="上级菜单"
+            rules={[{ required: true }]}
+            fieldProps={{
+              allowClear: false,
+              showSearch: true,
+              treeDefaultExpandAll: true,
+              treeNodeFilterProp: 'label',
+            }}
+            request={() => loadParentMenuTreeData(current?.id)}
+          />
+        )}
         <ProFormText name="path" label="路径" rules={[{ required: true }]} />
         <ProFormText name="icon" label="图标" rules={[{ required: true }]} />
         <ProFormDigit name="sort" label="排序" min={0} rules={[{ required: true }]} />

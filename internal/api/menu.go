@@ -4,11 +4,13 @@ import (
 	"gin-admin-template/internal/config"
 	"gin-admin-template/internal/domain"
 	"gin-admin-template/internal/service"
+	"net/http"
+	"sort"
+	"strconv"
+
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/copier"
 	"gorm.io/gorm"
-	"net/http"
-	"strconv"
 )
 
 type MenuQuery struct {
@@ -53,19 +55,50 @@ func GetMenus(c *gin.Context) {
 		copier.Copy(&mt, menu)
 		menuTree = append(menuTree, &mt)
 	}
-	tree := buildTree(menuTree, 0)
+	tree := buildTree(menuTree, 0, make(map[int64]bool))
 	c.JSON(http.StatusOK, tree)
 }
 
-func buildTree(menuTree []*MenuTree, pid int64) []*MenuTree {
+func buildTree(menuTree []*MenuTree, pid int64, visited map[int64]bool) []*MenuTree {
 	var children []*MenuTree
 	for _, menu := range menuTree {
 		if menu.Pid == pid {
-			menu.Children = buildTree(menuTree, menu.Id)
+			if visited[menu.Id] {
+				config.Log.Warnf("skip circular menu reference, id=%d pid=%d", menu.Id, menu.Pid)
+				continue
+			}
+			visited[menu.Id] = true
+			menu.Children = buildTree(menuTree, menu.Id, visited)
+			delete(visited, menu.Id)
 			children = append(children, menu)
 		}
 	}
+	sort.SliceStable(children, func(i, j int) bool {
+		if children[i].Sort == children[j].Sort {
+			return children[i].Id < children[j].Id
+		}
+		return children[i].Sort < children[j].Sort
+	})
 	return children
+}
+
+func isMenuDescendant(menus []domain.Menu, rootId int64, targetId int64, visited map[int64]bool) bool {
+	for _, menu := range menus {
+		if menu.Pid != rootId {
+			continue
+		}
+		if visited[menu.Id] {
+			continue
+		}
+		if menu.Id == targetId {
+			return true
+		}
+		visited[menu.Id] = true
+		if isMenuDescendant(menus, menu.Id, targetId, visited) {
+			return true
+		}
+	}
+	return false
 }
 
 // GetMenu
@@ -140,10 +173,9 @@ func CreateMenu(c *gin.Context) {
 	}
 	menuId := config.IdGenerate()
 	err = config.DB.Transaction(func(tx *gorm.DB) error {
-		menu := domain.Menu{
-			Id: menuId,
-		}
+		menu := domain.Menu{}
 		copier.Copy(&menu, &menuAdd)
+		menu.Id = menuId
 		if err = tx.Create(&menu).Error; err != nil {
 			return err
 		}
@@ -194,8 +226,9 @@ func UpdateMenu(c *gin.Context) {
 		config.Log.Error(err.Error())
 		return
 	}
+	menuAdd.Id = menuId
 	var menu domain.Menu
-	err = service.FindById(&menu, menuAdd.Id)
+	err = service.FindById(&menu, menuId)
 	if err != nil {
 		service.BadRequestResult(c, "NotExist.org")
 		config.Log.Error(err.Error())
@@ -205,6 +238,23 @@ func UpdateMenu(c *gin.Context) {
 		_, err = service.FindMenuByPath(menuAdd.Path)
 		if err == nil {
 			service.ConflictResult(c, "Existed.path")
+			return
+		}
+	}
+	if menuAdd.Pid == menuId {
+		service.ParamBadRequestResult(c)
+		return
+	}
+	if menuAdd.Pid != 0 {
+		var menus []domain.Menu
+		err = service.FindAll(&menus)
+		if err != nil {
+			service.BadRequestResult(c, "Failed.query")
+			config.Log.Error(err.Error())
+			return
+		}
+		if isMenuDescendant(menus, menuId, menuAdd.Pid, make(map[int64]bool)) {
+			service.ParamBadRequestResult(c)
 			return
 		}
 	}

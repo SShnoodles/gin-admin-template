@@ -46,7 +46,7 @@ func FindRoleIdsByUserId(id int64) ([]string, error) {
 
 func InitAdminUser() error {
 	var user domain.User
-	err := config.DB.First(&user, "username = ?", "admin").Error
+	err := config.DB.First(&user, "username = ?", "superadmin").Error
 	if err != nil {
 		if err.Error() == "record not found" {
 			password, err := util.EncryptedPassword(util.DefaultPassword)
