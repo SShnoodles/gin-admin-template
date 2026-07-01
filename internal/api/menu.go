@@ -5,7 +5,6 @@ import (
 	"gin-admin-template/internal/config"
 	"gin-admin-template/internal/domain"
 	"gin-admin-template/internal/service"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -35,6 +34,10 @@ func GetMenus(c *gin.Context) {
 		config.Log.Error(err.Error())
 		return
 	}
+	if !service.ValidatePageInfo(q.PageInfo) {
+		service.ParamBadRequestResult(c)
+		return
+	}
 	tree, err := service.FindMenuTree()
 	if err != nil {
 		service.BadRequestResult(c, "Failed.query")
@@ -53,14 +56,12 @@ func GetMenus(c *gin.Context) {
 // @Param id path string true "Menu ID"
 // @Router /menus/{id} [get]
 func GetMenu(c *gin.Context) {
-	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
-	if err != nil {
-		service.ParamBadRequestResult(c)
-		config.Log.Error(err.Error())
+	id, ok := service.ParseIdParam(c, "id")
+	if !ok {
 		return
 	}
 	var menu domain.Menu
-	err = service.FindById(&menu, id)
+	err := service.FindById(&menu, id)
 	if err != nil {
 		service.BadRequestResult(c, "Failed.query")
 		config.Log.Error(err.Error())
@@ -78,10 +79,8 @@ func GetMenu(c *gin.Context) {
 // @Param id path string true "Menu ID"
 // @Router /menus/{id}/resources [get]
 func GetMenuResources(c *gin.Context) {
-	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
-	if err != nil {
-		service.ParamBadRequestResult(c)
-		config.Log.Error(err.Error())
+	id, ok := service.ParseIdParam(c, "id")
+	if !ok {
 		return
 	}
 	resourceIds, err := service.FindResourceIdsByMenuId(id)
@@ -110,6 +109,10 @@ func CreateMenu(c *gin.Context) {
 		return
 	}
 	menuId, err := service.CreateMenu(menuAdd.Menu, menuAdd.ResourceIds)
+	if errors.Is(err, service.ErrInvalidParam) {
+		service.ParamBadRequestResult(c)
+		return
+	}
 	if errors.Is(err, service.ErrMenuPathExists) {
 		service.ConflictResult(c, "Existed.path")
 		return
@@ -132,20 +135,22 @@ func CreateMenu(c *gin.Context) {
 // @Param data body MenuAdd true "Menu info 菜单信息"
 // @Router /menus/{id} [put]
 func UpdateMenu(c *gin.Context) {
-	menuId, err := strconv.ParseInt(c.Param("id"), 10, 64)
-	if err != nil {
-		service.ParamBadRequestResult(c)
-		config.Log.Error(err.Error())
+	menuId, ok := service.ParseIdParam(c, "id")
+	if !ok {
 		return
 	}
 	var menuAdd MenuAdd
-	err = c.ShouldBindJSON(&menuAdd)
+	err := c.ShouldBindJSON(&menuAdd)
 	if err != nil {
 		service.ParamBadRequestResult(c)
 		config.Log.Error(err.Error())
 		return
 	}
 	err = service.UpdateMenu(menuId, menuAdd.Menu, menuAdd.ResourceIds)
+	if errors.Is(err, service.ErrInvalidParam) {
+		service.ParamBadRequestResult(c)
+		return
+	}
 	if errors.Is(err, service.ErrMenuNotFound) {
 		service.BadRequestResult(c, "NotExist.org")
 		return
@@ -175,13 +180,11 @@ func UpdateMenu(c *gin.Context) {
 // @Param id path string true "Menu ID"
 // @Router /menus/{id} [delete]
 func DeleteMenu(c *gin.Context) {
-	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
-	if err != nil {
-		service.ParamBadRequestResult(c)
-		config.Log.Error(err.Error())
+	id, ok := service.ParseIdParam(c, "id")
+	if !ok {
 		return
 	}
-	err = service.DeleteMenu(id)
+	err := service.DeleteMenu(id)
 	if err != nil {
 		service.BadRequestResult(c, "Failed.delete")
 		config.Log.Error(err.Error())

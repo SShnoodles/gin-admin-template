@@ -6,6 +6,7 @@ import (
 	"gin-admin-template/internal/domain"
 	"sort"
 	"strconv"
+	"strings"
 
 	"github.com/jinzhu/copier"
 	"gorm.io/gorm"
@@ -99,6 +100,9 @@ func buildMenuTree(menuTree []*MenuTree, pid int64, visited map[int64]bool) []*M
 }
 
 func CreateMenu(menu domain.Menu, resourceIds []string) (int64, error) {
+	if err := validateMenu(menu); err != nil {
+		return 0, err
+	}
 	_, err := FindMenuByPath(menu.Path)
 	if err == nil {
 		return 0, ErrMenuPathExists
@@ -119,6 +123,9 @@ func CreateMenu(menu domain.Menu, resourceIds []string) (int64, error) {
 }
 
 func UpdateMenu(menuId int64, input domain.Menu, resourceIds []string) error {
+	if err := validateMenu(input); err != nil {
+		return err
+	}
 	input.Id = menuId
 	var menu domain.Menu
 	err := FindById(&menu, menuId)
@@ -176,12 +183,12 @@ func replaceMenuResources(tx *gorm.DB, menuId int64, resourceIds []string) error
 	if len(resourceIds) == 0 {
 		return nil
 	}
+	ids, err := ParsePositiveIds(resourceIds)
+	if err != nil {
+		return err
+	}
 	var mrr []domain.MenuResourceRelation
-	for _, id := range resourceIds {
-		resourceId, err := strconv.ParseInt(id, 10, 64)
-		if err != nil {
-			return err
-		}
+	for _, resourceId := range ids {
 		mrr = append(mrr, domain.MenuResourceRelation{
 			Id:         config.IdGenerate(),
 			ResourceId: resourceId,
@@ -189,6 +196,13 @@ func replaceMenuResources(tx *gorm.DB, menuId int64, resourceIds []string) error
 		})
 	}
 	return tx.Create(&mrr).Error
+}
+
+func validateMenu(menu domain.Menu) error {
+	if menu.Pid < 0 || strings.TrimSpace(menu.Name) == "" || strings.TrimSpace(menu.Path) == "" || strings.TrimSpace(menu.Icon) == "" || menu.Sort < 0 {
+		return ErrInvalidParam
+	}
+	return nil
 }
 
 func isMenuDescendant(menus []domain.Menu, rootId int64, targetId int64, visited map[int64]bool) bool {

@@ -5,13 +5,19 @@ import (
 	"gin-admin-template/internal/config"
 	"gin-admin-template/internal/domain"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 	"gorm.io/gorm"
 )
 
+var ErrInvalidParam = errors.New("invalid parameter")
+
 func FindById[T any](t *T, id int64) error {
+	if id <= 0 {
+		return errors.New("id is invalid")
+	}
 	return config.DB.First(t, "id = ?", id).Error
 }
 
@@ -45,6 +51,34 @@ func DeleteById(i interface{}, id int64) error {
 type PageInfo struct {
 	PageSize  int `form:"pageSize"`
 	PageIndex int `form:"pageIndex"`
+}
+
+func ParseIdParam(c *gin.Context, name string) (int64, bool) {
+	id, err := strconv.ParseInt(c.Param(name), 10, 64)
+	if err != nil || id <= 0 {
+		ParamBadRequestResult(c)
+		if err != nil {
+			config.Log.Error(err.Error())
+		}
+		return 0, false
+	}
+	return id, true
+}
+
+func ValidatePageInfo(page PageInfo) bool {
+	return page.PageIndex >= 0 && page.PageSize >= 0
+}
+
+func ParsePositiveIds(ids []string) ([]int64, error) {
+	result := make([]int64, 0, len(ids))
+	for _, id := range ids {
+		parsed, err := strconv.ParseInt(id, 10, 64)
+		if err != nil || parsed <= 0 {
+			return nil, ErrInvalidParam
+		}
+		result = append(result, parsed)
+	}
+	return result, nil
 }
 
 type PagedResult[T any] struct {

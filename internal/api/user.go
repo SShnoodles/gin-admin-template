@@ -8,7 +8,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/copier"
-	"strconv"
 )
 
 type UserQuery struct {
@@ -48,6 +47,10 @@ func GetUsers(c *gin.Context) {
 		config.Log.Error(err.Error())
 		return
 	}
+	if !service.ValidatePageInfo(q.PageInfo) {
+		service.ParamBadRequestResult(c)
+		return
+	}
 	page := service.Pagination(config.DB, q.PageIndex, q.PageSize, []domain.User{})
 	result := service.PagedResult[UserOrg]{
 		Total: page.Total,
@@ -75,14 +78,12 @@ func GetUsers(c *gin.Context) {
 // @Param id path string true "User ID"
 // @Router /users/{id} [get]
 func GetUser(c *gin.Context) {
-	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
-	if err != nil {
-		service.ParamBadRequestResult(c)
-		config.Log.Error(err.Error())
+	id, ok := service.ParseIdParam(c, "id")
+	if !ok {
 		return
 	}
 	var user domain.User
-	err = service.FindById(&user, id)
+	err := service.FindById(&user, id)
 	if err != nil {
 		service.BadRequestResult(c, "Failed.query")
 		config.Log.Error(err.Error())
@@ -102,10 +103,8 @@ func GetUser(c *gin.Context) {
 // @Param id path string true "User ID"
 // @Router /users/{id}/roles [get]
 func GetUserRoles(c *gin.Context) {
-	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
-	if err != nil {
-		service.ParamBadRequestResult(c)
-		config.Log.Error(err.Error())
+	id, ok := service.ParseIdParam(c, "id")
+	if !ok {
 		return
 	}
 	roles, err := service.FindRoleIdsByUserId(id)
@@ -134,6 +133,10 @@ func CreateUser(c *gin.Context) {
 		return
 	}
 	userId, err := service.CreateUser(userAdd.User, userAdd.RoleIds)
+	if errors.Is(err, service.ErrInvalidParam) {
+		service.ParamBadRequestResult(c)
+		return
+	}
 	if errors.Is(err, service.ErrUserExists) {
 		service.BadRequestResult(c, "Existed.user")
 		return
@@ -156,20 +159,22 @@ func CreateUser(c *gin.Context) {
 // @Param data body UserAdd true "User info 用户信息"
 // @Router /users/{id} [put]
 func UpdateUser(c *gin.Context) {
-	userId, err := strconv.ParseInt(c.Param("id"), 10, 64)
-	if err != nil {
-		service.ParamBadRequestResult(c)
-		config.Log.Error(err.Error())
+	userId, ok := service.ParseIdParam(c, "id")
+	if !ok {
 		return
 	}
 	var userAdd UserAdd
-	err = c.ShouldBindJSON(&userAdd)
+	err := c.ShouldBindJSON(&userAdd)
 	if err != nil {
 		service.ParamBadRequestResult(c)
 		config.Log.Error(err.Error())
 		return
 	}
 	err = service.UpdateUserInfo(userId, userAdd.User, userAdd.RoleIds)
+	if errors.Is(err, service.ErrInvalidParam) {
+		service.ParamBadRequestResult(c)
+		return
+	}
 	if errors.Is(err, service.ErrUserNotFound) {
 		service.BadRequestResult(c, "NotExist.user")
 		return
@@ -195,13 +200,11 @@ func UpdateUser(c *gin.Context) {
 // @Param id path string true "User ID"
 // @Router /users/{id}/enabled [put]
 func EnabledUser(c *gin.Context) {
-	userId, err := strconv.ParseInt(c.Param("id"), 10, 64)
-	if err != nil {
-		service.ParamBadRequestResult(c)
-		config.Log.Error(err.Error())
+	userId, ok := service.ParseIdParam(c, "id")
+	if !ok {
 		return
 	}
-	err = service.ToggleUserEnabled(userId)
+	err := service.ToggleUserEnabled(userId)
 	if errors.Is(err, service.ErrUserNotFound) {
 		service.BadRequestResult(c, "NotExist.user")
 		return
@@ -235,6 +238,10 @@ func ChangeUserPassword(c *gin.Context) {
 	}
 
 	err = service.ChangeUserPassword(userId, userPassword.OldPassword, userPassword.NewPassword)
+	if errors.Is(err, service.ErrInvalidParam) {
+		service.ParamBadRequestResult(c)
+		return
+	}
 	if errors.Is(err, service.ErrUserNotFound) {
 		service.BadRequestResult(c, "NotExist.user")
 		return
@@ -260,14 +267,12 @@ func ChangeUserPassword(c *gin.Context) {
 // @Param id path string true "User ID"
 // @Router /users/{id} [delete]
 func DeleteUser(c *gin.Context) {
-	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
-	if err != nil {
-		service.ParamBadRequestResult(c)
-		config.Log.Error(err.Error())
+	id, ok := service.ParseIdParam(c, "id")
+	if !ok {
 		return
 	}
 
-	err = service.DeleteUser(id)
+	err := service.DeleteUser(id)
 	if errors.Is(err, service.ErrUserNotFound) {
 		service.BadRequestResult(c, "NotExist.user")
 		return

@@ -6,6 +6,7 @@ import (
 	"gin-admin-template/internal/domain"
 	"gin-admin-template/internal/util"
 	"strconv"
+	"strings"
 
 	"gorm.io/gorm"
 )
@@ -42,6 +43,9 @@ func FindRoleIdsByUserId(id int64) ([]string, error) {
 }
 
 func CreateUser(user domain.User, roleIds []string) (int64, error) {
+	if err := validateUser(user); err != nil {
+		return 0, err
+	}
 	existing, _ := FindUserByUsername(user.Username)
 	if existing != (domain.User{}) {
 		return 0, ErrUserExists
@@ -64,6 +68,9 @@ func CreateUser(user domain.User, roleIds []string) (int64, error) {
 }
 
 func UpdateUserInfo(userId int64, input domain.User, roleIds []string) error {
+	if err := validateUser(input); err != nil {
+		return err
+	}
 	var user domain.User
 	err := FindById(&user, userId)
 	if err != nil {
@@ -97,6 +104,9 @@ func ToggleUserEnabled(userId int64) error {
 }
 
 func ChangeUserPassword(userId int64, oldPassword string, newPassword string) error {
+	if strings.TrimSpace(oldPassword) == "" || strings.TrimSpace(newPassword) == "" {
+		return ErrInvalidParam
+	}
 	var user domain.User
 	err := FindById(&user, userId)
 	if err != nil {
@@ -136,12 +146,12 @@ func replaceUserRoles(tx *gorm.DB, userId int64, orgId int64, roleIds []string) 
 	if len(roleIds) == 0 {
 		return nil
 	}
+	ids, err := ParsePositiveIds(roleIds)
+	if err != nil {
+		return err
+	}
 	var urr []domain.UserRoleRelation
-	for _, id := range roleIds {
-		roleId, err := strconv.ParseInt(id, 10, 64)
-		if err != nil {
-			return err
-		}
+	for _, roleId := range ids {
 		urr = append(urr, domain.UserRoleRelation{
 			Id:     config.IdGenerate(),
 			UserId: userId,
@@ -150,6 +160,13 @@ func replaceUserRoles(tx *gorm.DB, userId int64, orgId int64, roleIds []string) 
 		})
 	}
 	return tx.Create(&urr).Error
+}
+
+func validateUser(user domain.User) error {
+	if strings.TrimSpace(user.Username) == "" || strings.TrimSpace(user.RealName) == "" || strings.TrimSpace(user.WorkNo) == "" || user.OrgId <= 0 {
+		return ErrInvalidParam
+	}
+	return nil
 }
 
 func InitAdminUser() error {

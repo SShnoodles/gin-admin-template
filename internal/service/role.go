@@ -5,6 +5,7 @@ import (
 	"gin-admin-template/internal/config"
 	"gin-admin-template/internal/domain"
 	"strconv"
+	"strings"
 
 	"gorm.io/gorm"
 )
@@ -40,6 +41,9 @@ func FindRolesByOrgId(orgId int64) ([]domain.Role, error) {
 }
 
 func CreateRole(role domain.Role, menuIds []string) (int64, error) {
+	if err := validateRole(role); err != nil {
+		return 0, err
+	}
 	roleId := config.IdGenerate()
 	return roleId, config.DB.Transaction(func(tx *gorm.DB) error {
 		role.Id = roleId
@@ -51,6 +55,9 @@ func CreateRole(role domain.Role, menuIds []string) (int64, error) {
 }
 
 func UpdateRole(roleId int64, input domain.Role, menuIds []string) error {
+	if err := validateRole(input); err != nil {
+		return err
+	}
 	var role domain.Role
 	err := FindById(&role, roleId)
 	if err != nil {
@@ -98,12 +105,12 @@ func replaceRoleMenus(tx *gorm.DB, roleId int64, menuIds []string) error {
 	if len(menuIds) == 0 {
 		return nil
 	}
+	ids, err := ParsePositiveIds(menuIds)
+	if err != nil {
+		return err
+	}
 	var rmr []domain.RoleMenuRelation
-	for _, id := range menuIds {
-		menuId, err := strconv.ParseInt(id, 10, 64)
-		if err != nil {
-			return err
-		}
+	for _, menuId := range ids {
 		rmr = append(rmr, domain.RoleMenuRelation{
 			Id:     config.IdGenerate(),
 			RoleId: roleId,
@@ -111,4 +118,11 @@ func replaceRoleMenus(tx *gorm.DB, roleId int64, menuIds []string) error {
 		})
 	}
 	return tx.Create(&rmr).Error
+}
+
+func validateRole(role domain.Role) error {
+	if strings.TrimSpace(role.Name) == "" || strings.TrimSpace(role.Code) == "" || role.OrgId <= 0 {
+		return ErrInvalidParam
+	}
+	return nil
 }

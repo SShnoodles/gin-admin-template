@@ -30,6 +30,10 @@ func GetResources(c *gin.Context) {
 		config.Log.Error(err.Error())
 		return
 	}
+	if !service.ValidatePageInfo(q.PageInfo) {
+		service.ParamBadRequestResult(c)
+		return
+	}
 	if q.PageSize == 0 {
 		var resources []domain.Resource
 		err = service.FindAll(&resources)

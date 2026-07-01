@@ -7,7 +7,6 @@ import (
 	"gin-admin-template/internal/service"
 
 	"github.com/gin-gonic/gin"
-	"strconv"
 )
 
 type OrgQuery struct {
@@ -36,6 +35,10 @@ func GetOrgs(c *gin.Context) {
 		config.Log.Error(err.Error())
 		return
 	}
+	if !service.ValidatePageInfo(q.PageInfo) {
+		service.ParamBadRequestResult(c)
+		return
+	}
 	if q.PageSize == 0 {
 		var orgs []domain.Org
 		err := service.FindAll(&orgs)
@@ -60,14 +63,12 @@ func GetOrgs(c *gin.Context) {
 // @Param id path string true "Org ID"
 // @Router /orgs/{id} [get]
 func GetOrg(c *gin.Context) {
-	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
-	if err != nil {
-		service.ParamBadRequestResult(c)
-		config.Log.Error(err.Error())
+	id, ok := service.ParseIdParam(c, "id")
+	if !ok {
 		return
 	}
 	var org domain.Org
-	err = service.FindById(&org, id)
+	err := service.FindById(&org, id)
 	if err != nil {
 		service.BadRequestResult(c, "Failed.query")
 		config.Log.Error(err.Error())
@@ -85,10 +86,8 @@ func GetOrg(c *gin.Context) {
 // @Param id path string true "Org ID"
 // @Router /orgs/{id}/menus [get]
 func GetOrgMenus(c *gin.Context) {
-	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
-	if err != nil {
-		service.ParamBadRequestResult(c)
-		config.Log.Error(err.Error())
+	id, ok := service.ParseIdParam(c, "id")
+	if !ok {
 		return
 	}
 	menusIds, err := service.FindMenuIdsByOrgId(id)
@@ -117,6 +116,10 @@ func CreateOrg(c *gin.Context) {
 		return
 	}
 	orgId, err := service.CreateOrg(orgAdd.Org, orgAdd.MenuIds)
+	if errors.Is(err, service.ErrInvalidParam) {
+		service.ParamBadRequestResult(c)
+		return
+	}
 	if errors.Is(err, service.ErrOrgNameExists) {
 		service.ConflictResult(c, "Existed.name")
 		return
@@ -139,20 +142,22 @@ func CreateOrg(c *gin.Context) {
 // @Param data body OrgAdd true "Org info 机构信息"
 // @Router /orgs/{id} [put]
 func UpdateOrg(c *gin.Context) {
-	orgId, err := strconv.ParseInt(c.Param("id"), 10, 64)
-	if err != nil {
-		service.ParamBadRequestResult(c)
-		config.Log.Error(err.Error())
+	orgId, ok := service.ParseIdParam(c, "id")
+	if !ok {
 		return
 	}
 	var orgAdd OrgAdd
-	err = c.ShouldBindJSON(&orgAdd)
+	err := c.ShouldBindJSON(&orgAdd)
 	if err != nil {
 		service.ParamBadRequestResult(c)
 		config.Log.Error(err.Error())
 		return
 	}
 	err = service.UpdateOrg(orgId, orgAdd.Org, orgAdd.MenuIds)
+	if errors.Is(err, service.ErrInvalidParam) {
+		service.ParamBadRequestResult(c)
+		return
+	}
 	if errors.Is(err, service.ErrOrgNotFound) {
 		service.BadRequestResult(c, "NotExist.org")
 		return
@@ -178,13 +183,11 @@ func UpdateOrg(c *gin.Context) {
 // @Param id path string true "Org ID"
 // @Router /orgs/{id} [delete]
 func DeleteOrg(c *gin.Context) {
-	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
-	if err != nil {
-		service.ParamBadRequestResult(c)
-		config.Log.Error(err.Error())
+	id, ok := service.ParseIdParam(c, "id")
+	if !ok {
 		return
 	}
-	err = service.DeleteOrg(id)
+	err := service.DeleteOrg(id)
 	if errors.Is(err, service.ErrOrgNotFound) {
 		service.BadRequestResult(c, "NotExist.org")
 		return

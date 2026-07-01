@@ -8,7 +8,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/copier"
-	"strconv"
 )
 
 type RoleQuery struct {
@@ -42,6 +41,10 @@ func GetRoles(c *gin.Context) {
 		config.Log.Error(err.Error())
 		return
 	}
+	if !service.ValidatePageInfo(q.PageInfo) {
+		service.ParamBadRequestResult(c)
+		return
+	}
 	page := service.Pagination(config.DB, q.PageIndex, q.PageSize, []domain.Role{})
 	result := service.PagedResult[RoleOrg]{
 		Total: page.Total,
@@ -68,14 +71,12 @@ func GetRoles(c *gin.Context) {
 // @Param id path string true "Org ID"
 // @Router /roles/{id} [get]
 func GetRole(c *gin.Context) {
-	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
-	if err != nil {
-		service.ParamBadRequestResult(c)
-		config.Log.Error(err.Error())
+	id, ok := service.ParseIdParam(c, "id")
+	if !ok {
 		return
 	}
 	var role domain.Role
-	err = service.FindById(&role, id)
+	err := service.FindById(&role, id)
 	if err != nil {
 		service.BadRequestResult(c, "Failed.query")
 		config.Log.Error(err.Error())
@@ -93,10 +94,8 @@ func GetRole(c *gin.Context) {
 // @Param id path string true "Role ID"
 // @Router /roles/{id}/menus [get]
 func GetRoleMenus(c *gin.Context) {
-	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
-	if err != nil {
-		service.ParamBadRequestResult(c)
-		config.Log.Error(err.Error())
+	id, ok := service.ParseIdParam(c, "id")
+	if !ok {
 		return
 	}
 	menusIds, err := service.FindMenuIdsByRoleId(id)
@@ -117,10 +116,8 @@ func GetRoleMenus(c *gin.Context) {
 // @Param orgId path string true "Org ID"
 // @Router /roles/orgs/{orgId} [get]
 func GetOrgRoles(c *gin.Context) {
-	orgId, err := strconv.ParseInt(c.Param("orgId"), 10, 64)
-	if err != nil {
-		service.ParamBadRequestResult(c)
-		config.Log.Error(err.Error())
+	orgId, ok := service.ParseIdParam(c, "orgId")
+	if !ok {
 		return
 	}
 	roles, err := service.FindRolesByOrgId(orgId)
@@ -149,6 +146,10 @@ func CreateRole(c *gin.Context) {
 		return
 	}
 	roleId, err := service.CreateRole(roleAdd.Role, roleAdd.MenuIds)
+	if errors.Is(err, service.ErrInvalidParam) {
+		service.ParamBadRequestResult(c)
+		return
+	}
 	if err != nil {
 		service.BadRequestResult(c, "Failed.create")
 		config.Log.Error(err.Error())
@@ -167,20 +168,22 @@ func CreateRole(c *gin.Context) {
 // @Param data body RoleAdd true "Role info 角色信息"
 // @Router /roles/{id} [put]
 func UpdateRole(c *gin.Context) {
-	roleId, err := strconv.ParseInt(c.Param("id"), 10, 64)
-	if err != nil {
-		service.ParamBadRequestResult(c)
-		config.Log.Error(err.Error())
+	roleId, ok := service.ParseIdParam(c, "id")
+	if !ok {
 		return
 	}
 	var roleAdd RoleAdd
-	err = c.ShouldBindJSON(&roleAdd)
+	err := c.ShouldBindJSON(&roleAdd)
 	if err != nil {
 		service.ParamBadRequestResult(c)
 		config.Log.Error(err.Error())
 		return
 	}
 	err = service.UpdateRole(roleId, roleAdd.Role, roleAdd.MenuIds)
+	if errors.Is(err, service.ErrInvalidParam) {
+		service.ParamBadRequestResult(c)
+		return
+	}
 	if errors.Is(err, service.ErrRoleNotFound) {
 		service.BadRequestResult(c, "NotExist.role")
 		return
@@ -206,13 +209,11 @@ func UpdateRole(c *gin.Context) {
 // @Param id path string true "Role ID"
 // @Router /roles/{id} [delete]
 func DeleteRole(c *gin.Context) {
-	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
-	if err != nil {
-		service.ParamBadRequestResult(c)
-		config.Log.Error(err.Error())
+	id, ok := service.ParseIdParam(c, "id")
+	if !ok {
 		return
 	}
-	err = service.DeleteRole(id)
+	err := service.DeleteRole(id)
 	if errors.Is(err, service.ErrRoleNotFound) {
 		service.BadRequestResult(c, "NotExist.role")
 		return
