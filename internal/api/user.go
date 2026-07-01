@@ -1,14 +1,13 @@
 package api
 
 import (
+	"errors"
 	"gin-admin-template/internal/config"
 	"gin-admin-template/internal/domain"
 	"gin-admin-template/internal/service"
-	"gin-admin-template/internal/util"
+
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/copier"
-	"gorm.io/gorm"
-	"net/http"
 	"strconv"
 )
 
@@ -64,7 +63,7 @@ func GetUsers(c *gin.Context) {
 			result.Data = append(result.Data, userOrg)
 		}
 	}
-	c.JSON(http.StatusOK, result)
+	service.Ok(c, result)
 }
 
 // GetUser
@@ -91,7 +90,7 @@ func GetUser(c *gin.Context) {
 	}
 	user.Password = ""
 
-	c.JSON(http.StatusOK, user)
+	service.Ok(c, user)
 }
 
 // GetUserRoles
@@ -115,7 +114,7 @@ func GetUserRoles(c *gin.Context) {
 		config.Log.Error(err.Error())
 		return
 	}
-	c.JSON(http.StatusOK, roles)
+	service.Ok(c, roles)
 }
 
 // CreateUser
@@ -134,51 +133,17 @@ func CreateUser(c *gin.Context) {
 		config.Log.Error(err.Error())
 		return
 	}
-	user, _ := service.FindUserByUsername(userAdd.Username)
-	if user != (domain.User{}) {
+	userId, err := service.CreateUser(userAdd.User, userAdd.RoleIds)
+	if errors.Is(err, service.ErrUserExists) {
 		service.BadRequestResult(c, "Existed.user")
-		config.Log.Error(err.Error())
 		return
 	}
-
-	userId := config.IdGenerate()
-	err = config.DB.Transaction(func(tx *gorm.DB) error {
-		password, _ := util.EncryptedPassword(util.DefaultPassword)
-		user := domain.User{
-			Id:       userId,
-			Username: userAdd.Username,
-			RealName: userAdd.RealName,
-			WorkNo:   userAdd.WorkNo,
-			Password: password,
-			OrgId:    userAdd.OrgId,
-			Enabled:  true,
-		}
-		if err = tx.Create(&user).Error; err != nil {
-			return err
-		}
-		if len(userAdd.RoleIds) > 0 {
-			var urr []domain.UserRoleRelation
-			for _, id := range userAdd.RoleIds {
-				roleId, _ := strconv.ParseInt(id, 10, 64)
-				urr = append(urr, domain.UserRoleRelation{
-					Id:     config.IdGenerate(),
-					UserId: userId,
-					RoleId: roleId,
-					OrgId:  userAdd.OrgId,
-				})
-			}
-			if err = tx.Create(&urr).Error; err != nil {
-				return err
-			}
-		}
-		return nil
-	})
 	if err != nil {
 		service.ParamBadRequestResult(c)
 		config.Log.Error(err.Error())
 		return
 	}
-	c.JSON(http.StatusOK, domain.NewIdWrapper(userId))
+	service.Ok(c, domain.NewIdWrapper(userId))
 }
 
 // UpdateUser
@@ -204,61 +169,21 @@ func UpdateUser(c *gin.Context) {
 		config.Log.Error(err.Error())
 		return
 	}
-	var user domain.User
-	err = service.FindById(&user, userId)
-	if err != nil {
+	err = service.UpdateUserInfo(userId, userAdd.User, userAdd.RoleIds)
+	if errors.Is(err, service.ErrUserNotFound) {
 		service.BadRequestResult(c, "NotExist.user")
-		config.Log.Error(err.Error())
 		return
 	}
-	if user.Username != userAdd.Username {
-		_, err := service.FindUserByUsername(userAdd.Username)
-		if err == nil {
-			service.ConflictResult(c, "Existed.user")
-			return
-		}
+	if errors.Is(err, service.ErrUserExists) {
+		service.ConflictResult(c, "Existed.user")
+		return
 	}
-	err = config.DB.Transaction(func(tx *gorm.DB) error {
-		user.Username = userAdd.Username
-		user.RealName = userAdd.RealName
-		user.WorkNo = userAdd.WorkNo
-		user.OrgId = userAdd.OrgId
-		if err = tx.Save(&user).Error; err != nil {
-			return err
-		}
-		var oldUrr []domain.UserRoleRelation
-		if err = tx.Where("user_id = ?", userId).Find(&oldUrr).Error; err != nil {
-			return err
-		}
-		if len(oldUrr) > 0 {
-			if err = tx.Delete(oldUrr).Error; err != nil {
-				return err
-			}
-		}
-
-		if len(userAdd.RoleIds) > 0 {
-			var urr []domain.UserRoleRelation
-			for _, id := range userAdd.RoleIds {
-				roleId, _ := strconv.ParseInt(id, 10, 64)
-				urr = append(urr, domain.UserRoleRelation{
-					Id:     config.IdGenerate(),
-					UserId: userId,
-					RoleId: roleId,
-					OrgId:  userAdd.OrgId,
-				})
-			}
-			if err = tx.Create(&urr).Error; err != nil {
-				return err
-			}
-		}
-		return nil
-	})
 	if err != nil {
 		service.BadRequestResult(c, "Failed.update")
 		config.Log.Error(err.Error())
 		return
 	}
-	c.JSON(http.StatusOK, service.UpdateSuccessResult())
+	service.Ok(c, service.UpdateSuccessResult())
 }
 
 // EnabledUser
@@ -276,20 +201,17 @@ func EnabledUser(c *gin.Context) {
 		config.Log.Error(err.Error())
 		return
 	}
-	var user domain.User
-	err = service.FindById(&user, userId)
-	if err != nil {
+	err = service.ToggleUserEnabled(userId)
+	if errors.Is(err, service.ErrUserNotFound) {
 		service.BadRequestResult(c, "NotExist.user")
-		config.Log.Error(err.Error())
 		return
 	}
-	err = config.DB.Model(&user).UpdateColumn("enabled", !user.Enabled).Error
 	if err != nil {
 		service.BadRequestResult(c, "Failed.update")
 		config.Log.Error(err.Error())
 		return
 	}
-	c.JSON(http.StatusOK, service.UpdateSuccessResult())
+	service.Ok(c, service.UpdateSuccessResult())
 }
 
 // ChangeUserPassword
@@ -312,26 +234,21 @@ func ChangeUserPassword(c *gin.Context) {
 		return
 	}
 
-	var user domain.User
-	err = service.FindById(&user, userId)
-	if err != nil {
+	err = service.ChangeUserPassword(userId, userPassword.OldPassword, userPassword.NewPassword)
+	if errors.Is(err, service.ErrUserNotFound) {
 		service.BadRequestResult(c, "NotExist.user")
-		config.Log.Error(err.Error())
 		return
 	}
-	isRight := util.VerifyPassword(userPassword.OldPassword, user.Password)
-	if !isRight {
+	if errors.Is(err, service.ErrUserPasswordWrong) {
 		service.BadRequestResult(c, "Error.password")
 		return
 	}
-	password, _ := util.EncryptedPassword(userPassword.NewPassword)
-	err = config.DB.Model(&user).UpdateColumn("password", password).Error
 	if err != nil {
 		service.BadRequestResult(c, "Failed.update")
 		config.Log.Error(err.Error())
 		return
 	}
-	c.JSON(http.StatusOK, service.UpdateSuccessResult())
+	service.Ok(c, service.UpdateSuccessResult())
 }
 
 // DeleteUser
@@ -350,27 +267,15 @@ func DeleteUser(c *gin.Context) {
 		return
 	}
 
-	var user domain.User
-	err = service.FindById(&user, id)
-	if err != nil {
+	err = service.DeleteUser(id)
+	if errors.Is(err, service.ErrUserNotFound) {
 		service.BadRequestResult(c, "NotExist.user")
-		config.Log.Error(err.Error())
 		return
 	}
-	err = config.DB.Transaction(func(tx *gorm.DB) error {
-		if err = tx.Delete(&user).Error; err != nil {
-			return err
-		}
-		if err = tx.Where("user_id = ?", id).Delete(&domain.UserRoleRelation{}).Error; err != nil {
-			return err
-		}
-		return nil
-	})
-
 	if err != nil {
 		service.BadRequestResult(c, "Failed.delete")
 		config.Log.Error(err.Error())
 		return
 	}
-	c.JSON(http.StatusOK, service.DeleteSuccessResult())
+	service.Ok(c, service.DeleteSuccessResult())
 }

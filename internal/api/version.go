@@ -1,8 +1,9 @@
 package api
 
 import (
+	"gin-admin-template/internal/service"
+
 	"github.com/gin-gonic/gin"
-	"net/http"
 )
 
 const Version = "1.0.0"
@@ -14,5 +15,5 @@ const Version = "1.0.0"
 // @Produce json
 // @Router /project/version [get]
 func GetVersion(c *gin.Context) {
-	c.String(http.StatusOK, Version)
+	service.Ok(c, Version)
 }

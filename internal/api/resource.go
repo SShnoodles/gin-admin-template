@@ -5,7 +5,6 @@ import (
 	"gin-admin-template/internal/domain"
 	"gin-admin-template/internal/service"
 	"github.com/gin-gonic/gin"
-	"net/http"
 )
 
 type ResourceQuery struct {
@@ -39,9 +38,9 @@ func GetResources(c *gin.Context) {
 			config.Log.Error(err.Error())
 			return
 		}
-		c.JSON(http.StatusOK, resources)
+		service.Ok(c, resources)
 		return
 	}
 	page := service.Pagination(config.DB, q.PageIndex, q.PageSize, []domain.Resource{})
-	c.JSON(http.StatusOK, page)
+	service.Ok(c, page)
 }

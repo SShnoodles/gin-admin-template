@@ -1,9 +1,17 @@
 package service
 
 import (
+	"errors"
 	"gin-admin-template/internal/config"
 	"gin-admin-template/internal/domain"
 	"strconv"
+
+	"gorm.io/gorm"
+)
+
+var (
+	ErrOrgNameExists = errors.New("org name exists")
+	ErrOrgNotFound   = errors.New("org not found")
 )
 
 func FindMenuIdsByOrgId(id int64) ([]string, error) {
@@ -20,4 +28,84 @@ func FindMenuIdsByOrgId(id int64) ([]string, error) {
 		ids = append(ids, strconv.FormatInt(m.MenuId, 10))
 	}
 	return ids, nil
+}
+
+func CreateOrg(org domain.Org, menuIds []string) (int64, error) {
+	var existing domain.Org
+	err := FindByName(&existing, org.Name)
+	if err == nil {
+		return 0, ErrOrgNameExists
+	}
+
+	orgId := config.IdGenerate()
+	return orgId, config.DB.Transaction(func(tx *gorm.DB) error {
+		org.Id = orgId
+		if err := tx.Create(&org).Error; err != nil {
+			return err
+		}
+		return replaceOrgMenus(tx, orgId, menuIds)
+	})
+}
+
+func UpdateOrg(orgId int64, input domain.Org, menuIds []string) error {
+	var org domain.Org
+	err := FindById(&org, orgId)
+	if err != nil {
+		return ErrOrgNotFound
+	}
+	if input.Name != org.Name {
+		var existing domain.Org
+		err = FindByName(&existing, input.Name)
+		if err == nil {
+			return ErrOrgNameExists
+		}
+	}
+	return config.DB.Transaction(func(tx *gorm.DB) error {
+		org.Name = input.Name
+		org.CreditCode = input.CreditCode
+		org.Address = input.Address
+		if err := tx.Save(&org).Error; err != nil {
+			return err
+		}
+		return replaceOrgMenus(tx, orgId, menuIds)
+	})
+}
+
+func DeleteOrg(id int64) error {
+	var org domain.Org
+	err := FindById(&org, id)
+	if err != nil {
+		return ErrOrgNotFound
+	}
+	return config.DB.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Delete(&org).Error; err != nil {
+			return err
+		}
+		if err := tx.Where("org_id = ?", id).Delete(&domain.OrgMenuRelation{}).Error; err != nil {
+			return err
+		}
+		return nil
+	})
+}
+
+func replaceOrgMenus(tx *gorm.DB, orgId int64, menuIds []string) error {
+	if err := tx.Where("org_id = ?", orgId).Delete(&domain.OrgMenuRelation{}).Error; err != nil {
+		return err
+	}
+	if len(menuIds) == 0 {
+		return nil
+	}
+	var omr []domain.OrgMenuRelation
+	for _, id := range menuIds {
+		menuId, err := strconv.ParseInt(id, 10, 64)
+		if err != nil {
+			return err
+		}
+		omr = append(omr, domain.OrgMenuRelation{
+			Id:     config.IdGenerate(),
+			OrgId:  orgId,
+			MenuId: menuId,
+		})
+	}
+	return tx.Create(&omr).Error
 }

@@ -16,24 +16,26 @@ func NewIdWrapper(id int64) IdWrapper {
 	return IdWrapper{Id: id}
 }
 
-// Result 传统返回结构
 type Result[T any] struct {
-	Data         *T     `json:"data"`
-	ErrorMessage string `json:"errorMessage"`
-	ResultCode   string `json:"resultCode"`
+	Success      bool   `json:"success"`
+	Data         T      `json:"data,omitempty"`
+	ErrorCode    string `json:"errorCode,omitempty"`
+	ErrorMessage string `json:"errorMessage,omitempty"`
+	ShowType     int    `json:"showType,omitempty"`
 }
 
 func FailureResult[T any](message string) *Result[T] {
 	return &Result[T]{
+		Success:      false,
 		ErrorMessage: message,
-		ResultCode:   "400",
+		ErrorCode:    "400",
+		ShowType:     2,
 	}
 }
 
-func SuccessResult[T any](data *T) *Result[T] {
+func SuccessResult[T any](data T) *Result[T] {
 	return &Result[T]{
-		Data:         data,
-		ErrorMessage: "",
-		ResultCode:   "200",
+		Success: true,
+		Data:    data,
 	}
 }

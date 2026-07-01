@@ -1,15 +1,12 @@
 package api
 
 import (
+	"errors"
 	"gin-admin-template/internal/config"
-	"gin-admin-template/internal/domain"
 	"gin-admin-template/internal/middleware"
 	"gin-admin-template/internal/service"
-	"gin-admin-template/internal/util"
+
 	"github.com/gin-gonic/gin"
-	"github.com/mojocn/base64Captcha"
-	"net/http"
-	"time"
 )
 
 type LoginInfo struct {
@@ -17,12 +14,6 @@ type LoginInfo struct {
 	Password string `json:"password" validate:"required"`
 	CodeId   string `json:"codeId" validate:"required"`
 	Code     string `json:"code" validate:"required"`
-}
-
-type LoginResult struct {
-	AccessToken  string    `json:"accessToken"`
-	Expires      time.Time `json:"expires"`
-	RefreshToken string    `json:"refreshToken"`
 }
 
 // Login
@@ -42,32 +33,28 @@ func Login(c *gin.Context) {
 	}
 	msg := middleware.ValidateParam(&login)
 	if msg != "" {
-		c.String(http.StatusBadRequest, msg)
+		service.Fail(c, 400, "400", msg)
 		return
 	}
-	// check code
-	if !base64Captcha.DefaultMemStore.Verify(login.CodeId, login.Code, true) {
+	result, err := service.Login(login.Username, login.Password, login.CodeId, login.Code)
+	if errors.Is(err, service.ErrCaptchaInvalid) {
 		service.UnauthorizedResult(c, "Error.code")
 		return
 	}
-	// check password
-	user, err := service.FindUserByUsername(login.Username)
-	if user == (domain.User{}) {
+	if errors.Is(err, service.ErrUserNotFound) {
 		service.UnauthorizedResult(c, "NotExist.user")
 		return
 	}
-	isRight := util.VerifyPassword(login.Password, user.Password)
-	if !isRight {
+	if errors.Is(err, service.ErrPasswordWrong) {
 		service.UnauthorizedResult(c, "Error.password")
 		return
 	}
-	// create jwt
-	jwt, expiresAt, err := util.GenerateToken(user.Id)
-	result := LoginResult{
-		AccessToken: jwt,
-		Expires:     expiresAt,
+	if err != nil {
+		service.BadRequestResult(c, "Failed.create")
+		config.Log.Error(err.Error())
+		return
 	}
-	c.JSON(http.StatusOK, result)
+	service.Ok(c, result)
 }
 
 // Captcha
@@ -77,16 +64,11 @@ func Login(c *gin.Context) {
 // @Produce json
 // @Router /login/captcha [post]
 func Captcha(c *gin.Context) {
-	driver := base64Captcha.NewDriverDigit(80, 240, 4, 0.7, 80)
-	captcha := base64Captcha.NewCaptcha(driver, base64Captcha.DefaultMemStore)
-	id, b64s, _, err := captcha.Generate()
+	result, err := service.GenerateCaptcha()
 	if err != nil {
 		service.BadRequestResult(c, "Failed.create")
 		config.Log.Error(err.Error())
 		return
 	}
-	var result = make(map[string]string)
-	result["codeId"] = id
-	result["code"] = b64s
-	c.JSON(http.StatusOK, result)
+	service.Ok(c, result)
 }

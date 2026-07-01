@@ -1,12 +1,12 @@
 package api
 
 import (
+	"errors"
 	"gin-admin-template/internal/config"
 	"gin-admin-template/internal/domain"
 	"gin-admin-template/internal/service"
+
 	"github.com/gin-gonic/gin"
-	"gorm.io/gorm"
-	"net/http"
 	"strconv"
 )
 
@@ -44,11 +44,11 @@ func GetOrgs(c *gin.Context) {
 			config.Log.Error(err.Error())
 			return
 		}
-		c.JSON(http.StatusOK, orgs)
+		service.Ok(c, orgs)
 		return
 	}
 	page := service.Pagination(config.DB, q.PageIndex, q.PageSize, []domain.Org{})
-	c.JSON(http.StatusOK, page)
+	service.Ok(c, page)
 }
 
 // GetOrg
@@ -73,7 +73,7 @@ func GetOrg(c *gin.Context) {
 		config.Log.Error(err.Error())
 		return
 	}
-	c.JSON(http.StatusOK, org)
+	service.Ok(c, org)
 }
 
 // GetOrgMenus
@@ -97,7 +97,7 @@ func GetOrgMenus(c *gin.Context) {
 		config.Log.Error(err.Error())
 		return
 	}
-	c.JSON(http.StatusOK, menusIds)
+	service.Ok(c, menusIds)
 }
 
 // CreateOrg
@@ -116,46 +116,17 @@ func CreateOrg(c *gin.Context) {
 		config.Log.Error(err.Error())
 		return
 	}
-	var org domain.Org
-	err = service.FindByName(&org, orgAdd.Name)
-	if err == nil {
+	orgId, err := service.CreateOrg(orgAdd.Org, orgAdd.MenuIds)
+	if errors.Is(err, service.ErrOrgNameExists) {
 		service.ConflictResult(c, "Existed.name")
 		return
 	}
-
-	orgId := config.IdGenerate()
-	err = config.DB.Transaction(func(tx *gorm.DB) error {
-		org := domain.Org{
-			Id:         orgId,
-			Name:       orgAdd.Name,
-			CreditCode: orgAdd.CreditCode,
-			Address:    orgAdd.Address,
-		}
-		if err = tx.Create(&org).Error; err != nil {
-			return err
-		}
-		if len(orgAdd.MenuIds) > 0 {
-			var omr []domain.OrgMenuRelation
-			for _, id := range orgAdd.MenuIds {
-				menuId, _ := strconv.ParseInt(id, 10, 64)
-				omr = append(omr, domain.OrgMenuRelation{
-					Id:     config.IdGenerate(),
-					OrgId:  orgId,
-					MenuId: menuId,
-				})
-			}
-			if err = tx.Create(&omr).Error; err != nil {
-				return err
-			}
-		}
-		return nil
-	})
 	if err != nil {
 		service.BadRequestResult(c, "Failed.create")
 		config.Log.Error(err.Error())
 		return
 	}
-	c.JSON(http.StatusOK, domain.NewIdWrapper(orgId))
+	service.Ok(c, domain.NewIdWrapper(orgId))
 }
 
 // UpdateOrg
@@ -181,60 +152,21 @@ func UpdateOrg(c *gin.Context) {
 		config.Log.Error(err.Error())
 		return
 	}
-	var org domain.Org
-	err = service.FindById(&org, orgId)
-	if err != nil {
+	err = service.UpdateOrg(orgId, orgAdd.Org, orgAdd.MenuIds)
+	if errors.Is(err, service.ErrOrgNotFound) {
 		service.BadRequestResult(c, "NotExist.org")
-		config.Log.Error(err.Error())
 		return
 	}
-	if orgAdd.Name != org.Name {
-		var org domain.Org
-		err = service.FindByName(&org, orgAdd.Name)
-		if err == nil {
-			service.ConflictResult(c, "Existed.name")
-			return
-		}
+	if errors.Is(err, service.ErrOrgNameExists) {
+		service.ConflictResult(c, "Existed.name")
+		return
 	}
-	err = config.DB.Transaction(func(tx *gorm.DB) error {
-		org.Name = orgAdd.Name
-		org.CreditCode = orgAdd.CreditCode
-		org.Address = orgAdd.Address
-		if err = tx.Save(&org).Error; err != nil {
-			return err
-		}
-		var oldOmr []domain.OrgMenuRelation
-		if err = tx.Where("org_id = ?", orgId).Find(&oldOmr).Error; err != nil {
-			return err
-		}
-		if len(oldOmr) > 0 {
-			if err = tx.Delete(oldOmr).Error; err != nil {
-				return err
-			}
-		}
-		if len(orgAdd.MenuIds) > 0 {
-			var omr []domain.OrgMenuRelation
-			for _, id := range orgAdd.MenuIds {
-				menuId, _ := strconv.ParseInt(id, 10, 64)
-				omr = append(omr, domain.OrgMenuRelation{
-					Id:     config.IdGenerate(),
-					OrgId:  orgId,
-					MenuId: menuId,
-				})
-			}
-			if err = tx.Create(&omr).Error; err != nil {
-				return err
-			}
-		}
-		return nil
-	})
-
 	if err != nil {
 		service.BadRequestResult(c, "Failed.update")
 		config.Log.Error(err.Error())
 		return
 	}
-	c.JSON(http.StatusOK, service.UpdateSuccessResult())
+	service.Ok(c, service.UpdateSuccessResult())
 }
 
 // DeleteOrg
@@ -252,27 +184,16 @@ func DeleteOrg(c *gin.Context) {
 		config.Log.Error(err.Error())
 		return
 	}
-	var org domain.Org
-	err = service.FindById(&org, id)
-	if err != nil {
+	err = service.DeleteOrg(id)
+	if errors.Is(err, service.ErrOrgNotFound) {
 		service.BadRequestResult(c, "NotExist.org")
-		config.Log.Error(err.Error())
 		return
 	}
-	err = config.DB.Transaction(func(tx *gorm.DB) error {
-		if err = tx.Delete(&org).Error; err != nil {
-			return err
-		}
-		if err = tx.Where("org_id = ?", id).Delete(&domain.OrgMenuRelation{}).Error; err != nil {
-			return err
-		}
-		return nil
-	})
 	if err != nil {
 		service.BadRequestResult(c, "Failed.delete")
 		config.Log.Error(err.Error())
 		return
 	}
 
-	c.JSON(http.StatusOK, service.DeleteSuccessResult())
+	service.Ok(c, service.DeleteSuccessResult())
 }

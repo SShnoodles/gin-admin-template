@@ -1,13 +1,13 @@
 package api
 
 import (
+	"errors"
 	"gin-admin-template/internal/config"
 	"gin-admin-template/internal/domain"
 	"gin-admin-template/internal/service"
+
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/copier"
-	"gorm.io/gorm"
-	"net/http"
 	"strconv"
 )
 
@@ -56,7 +56,7 @@ func GetRoles(c *gin.Context) {
 			result.Data = append(result.Data, roleOrg)
 		}
 	}
-	c.JSON(http.StatusOK, result)
+	service.Ok(c, result)
 }
 
 // GetRole
@@ -81,7 +81,7 @@ func GetRole(c *gin.Context) {
 		config.Log.Error(err.Error())
 		return
 	}
-	c.JSON(http.StatusOK, role)
+	service.Ok(c, role)
 }
 
 // GetRoleMenus
@@ -105,7 +105,7 @@ func GetRoleMenus(c *gin.Context) {
 		config.Log.Error(err.Error())
 		return
 	}
-	c.JSON(http.StatusOK, menusIds)
+	service.Ok(c, menusIds)
 }
 
 // GetOrgRoles
@@ -129,7 +129,7 @@ func GetOrgRoles(c *gin.Context) {
 		config.Log.Error(err.Error())
 		return
 	}
-	c.JSON(http.StatusOK, roles)
+	service.Ok(c, roles)
 }
 
 // CreateRole
@@ -148,39 +148,13 @@ func CreateRole(c *gin.Context) {
 		config.Log.Error(err.Error())
 		return
 	}
-	roleId := config.IdGenerate()
-	err = config.DB.Transaction(func(tx *gorm.DB) error {
-		role := domain.Role{
-			Id:    roleId,
-			Name:  roleAdd.Name,
-			Code:  roleAdd.Code,
-			OrgId: roleAdd.OrgId,
-		}
-		if err = tx.Create(&role).Error; err != nil {
-			return err
-		}
-		if len(roleAdd.MenuIds) > 0 {
-			var rmr []domain.RoleMenuRelation
-			for _, id := range roleAdd.MenuIds {
-				menuId, _ := strconv.ParseInt(id, 10, 64)
-				rmr = append(rmr, domain.RoleMenuRelation{
-					Id:     config.IdGenerate(),
-					RoleId: roleId,
-					MenuId: menuId,
-				})
-			}
-			if err = tx.Create(&rmr).Error; err != nil {
-				return err
-			}
-		}
-		return nil
-	})
+	roleId, err := service.CreateRole(roleAdd.Role, roleAdd.MenuIds)
 	if err != nil {
 		service.BadRequestResult(c, "Failed.create")
 		config.Log.Error(err.Error())
 		return
 	}
-	c.JSON(http.StatusOK, domain.NewIdWrapper(roleId))
+	service.Ok(c, domain.NewIdWrapper(roleId))
 }
 
 // UpdateRole
@@ -206,59 +180,21 @@ func UpdateRole(c *gin.Context) {
 		config.Log.Error(err.Error())
 		return
 	}
-	var role domain.Role
-	err = service.FindById(&role, roleId)
-	if err != nil {
+	err = service.UpdateRole(roleId, roleAdd.Role, roleAdd.MenuIds)
+	if errors.Is(err, service.ErrRoleNotFound) {
 		service.BadRequestResult(c, "NotExist.role")
-		config.Log.Error(err.Error())
 		return
 	}
-	if roleAdd.Code != role.Code {
-		var role domain.Role
-		err = service.FindByCode(&role, roleAdd.Code)
-		if err == nil {
-			service.ConflictResult(c, "Existed.code")
-			return
-		}
+	if errors.Is(err, service.ErrRoleCodeExists) {
+		service.ConflictResult(c, "Existed.code")
+		return
 	}
-	err = config.DB.Transaction(func(tx *gorm.DB) error {
-		role.Name = roleAdd.Name
-		role.Code = roleAdd.Code
-		role.OrgId = roleAdd.OrgId
-		if err = tx.Save(&role).Error; err != nil {
-			return err
-		}
-		var oldRmr []domain.RoleMenuRelation
-		if err = tx.Where("role_id = ?", roleId).Find(&oldRmr).Error; err != nil {
-			return err
-		}
-		if len(oldRmr) > 0 {
-			if err = tx.Delete(oldRmr).Error; err != nil {
-				return err
-			}
-		}
-		if len(roleAdd.MenuIds) > 0 {
-			var rmr []domain.RoleMenuRelation
-			for _, id := range roleAdd.MenuIds {
-				menuId, _ := strconv.ParseInt(id, 10, 64)
-				rmr = append(rmr, domain.RoleMenuRelation{
-					Id:     config.IdGenerate(),
-					RoleId: roleId,
-					MenuId: menuId,
-				})
-			}
-			if err = tx.Create(&rmr).Error; err != nil {
-				return err
-			}
-		}
-		return nil
-	})
 	if err != nil {
 		service.BadRequestResult(c, "Failed.update")
 		config.Log.Error(err.Error())
 		return
 	}
-	c.JSON(http.StatusOK, service.UpdateSuccessResult())
+	service.Ok(c, service.UpdateSuccessResult())
 }
 
 // DeleteRole
@@ -276,26 +212,15 @@ func DeleteRole(c *gin.Context) {
 		config.Log.Error(err.Error())
 		return
 	}
-	var role domain.Role
-	err = service.FindById(&role, id)
-	if err != nil {
+	err = service.DeleteRole(id)
+	if errors.Is(err, service.ErrRoleNotFound) {
 		service.BadRequestResult(c, "NotExist.role")
-		config.Log.Error(err.Error())
 		return
 	}
-	err = config.DB.Transaction(func(tx *gorm.DB) error {
-		if err = tx.Delete(&role).Error; err != nil {
-			return err
-		}
-		if err = tx.Where("role_id = ?", id).Delete(&domain.RoleMenuRelation{}).Error; err != nil {
-			return err
-		}
-		return nil
-	})
 	if err != nil {
 		service.BadRequestResult(c, "Failed.delete")
 		config.Log.Error(err.Error())
 		return
 	}
-	c.JSON(http.StatusOK, service.DeleteSuccessResult())
+	service.Ok(c, service.DeleteSuccessResult())
 }

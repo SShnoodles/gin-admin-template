@@ -14,7 +14,7 @@ enum ErrorShowType {
 interface ResponseStructure {
   success: boolean;
   data: unknown;
-  errorCode?: number;
+  errorCode?: number | string;
   errorMessage?: string;
   showType?: ErrorShowType;
 }
@@ -101,5 +101,13 @@ export const errorConfig: RequestConfig = {
   ],
 
   // 响应拦截器
-  responseInterceptors: [],
+  responseInterceptors: [
+    (response) => {
+      const body = response.data as unknown as ResponseStructure;
+      if (body && typeof body === 'object' && body.success === true) {
+        response.data = body.data as typeof response.data;
+      }
+      return response;
+    },
+  ],
 };
