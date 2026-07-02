@@ -62,7 +62,8 @@ export const layout: RunTimeLayoutConfig = ({ initialState, setInitialState }) =
     footerRender: () => <Footer />,
     onPageChange: () => {
       const { location } = history;
-      if (!initialState?.currentUser && location.pathname !== loginPath) {
+      const currentUser = initialState?.currentUser ?? getCurrentUser();
+      if (!currentUser && location.pathname !== loginPath) {
         history.replace(
           `${loginPath}?redirect=${encodeURIComponent(
             location.pathname + location.search + location.hash,
@@ -117,6 +118,7 @@ export const request: RequestConfig = {
   baseURL: '/api',
   ...errorConfig,
   requestInterceptors: [
+    ...(errorConfig.requestInterceptors || []),
     (config: RequestOptions) => {
       const token = getToken();
       if (token) {
@@ -129,6 +131,7 @@ export const request: RequestConfig = {
     },
   ],
   responseInterceptors: [
+    ...(errorConfig.responseInterceptors || []),
     (response) => {
       if (response.status === 401) {
         clearSession();

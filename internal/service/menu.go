@@ -18,9 +18,39 @@ var (
 	ErrInvalidMenuParent = errors.New("invalid menu parent")
 )
 
+type InitialMenu struct {
+	Name     string
+	Path     string
+	Icon     string
+	Sort     int32
+	Children []InitialMenu
+}
+
 type MenuTree struct {
 	domain.Menu
 	Children []*MenuTree `json:"children"`
+}
+
+var defaultMenus = []InitialMenu{
+	{
+		Name: "首页",
+		Path: "/home",
+		Icon: "home",
+		Sort: 1,
+	},
+	{
+		Name: "系统管理",
+		Path: "/system",
+		Icon: "setting",
+		Sort: 10,
+		Children: []InitialMenu{
+			{Name: "用户管理", Path: "/system/users", Icon: "user", Sort: 1},
+			{Name: "机构管理", Path: "/system/orgs", Icon: "apartment", Sort: 2},
+			{Name: "角色管理", Path: "/system/roles", Icon: "team", Sort: 3},
+			{Name: "菜单管理", Path: "/system/menus", Icon: "menu", Sort: 4},
+			{Name: "资源管理", Path: "/system/resources", Icon: "api", Sort: 5},
+		},
+	},
 }
 
 func FindMenuByPath(path string) (domain.Menu, error) {
@@ -59,6 +89,57 @@ func FindResourceIdsByMenuId(id int64) ([]string, error) {
 		ids = append(ids, strconv.FormatInt(m.ResourceId, 10))
 	}
 	return ids, nil
+}
+
+func InitMenus() error {
+	return config.DB.Transaction(func(tx *gorm.DB) error {
+		for _, menu := range defaultMenus {
+			if err := saveInitialMenu(tx, menu, 0); err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+}
+
+func saveInitialMenu(tx *gorm.DB, item InitialMenu, pid int64) error {
+	menu := domain.Menu{
+		Pid:  pid,
+		Name: item.Name,
+		Path: item.Path,
+		Icon: item.Icon,
+		Sort: item.Sort,
+	}
+	if err := validateMenu(menu); err != nil {
+		return err
+	}
+
+	var existing domain.Menu
+	err := tx.First(&existing, "path = ?", item.Path).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		menu.Id = config.IdGenerate()
+		if err := tx.Create(&menu).Error; err != nil {
+			return err
+		}
+		existing = menu
+	} else if err != nil {
+		return err
+	} else {
+		existing.Pid = pid
+		existing.Name = item.Name
+		existing.Icon = item.Icon
+		existing.Sort = item.Sort
+		if err := tx.Save(&existing).Error; err != nil {
+			return err
+		}
+	}
+
+	for _, child := range item.Children {
+		if err := saveInitialMenu(tx, child, existing.Id); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func FindMenuTree() ([]*MenuTree, error) {

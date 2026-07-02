@@ -75,8 +75,10 @@ const OrgPage = () => {
         columns={columns}
         request={async (params) => {
           const result = await getOrgs(params);
-          const data = Array.isArray(result) ? result : result.data || [];
-          return { data, total: Array.isArray(result) ? data.length : result.total, success: true };
+          if (Array.isArray(result)) {
+            return { data: result, total: result.length, success: true };
+          }
+          return { data: result.data || [], total: result.total, success: true };
         }}
         toolBarRender={() => [
           <Button key="new" type="primary" icon={<PlusOutlined />} onClick={() => openForm()}>

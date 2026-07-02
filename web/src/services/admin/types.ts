@@ -9,6 +9,14 @@ export type PageResult<T> = {
   total?: number;
 };
 
+export type ApiResult<T> = {
+  success: boolean;
+  data?: T;
+  errorCode?: string | number;
+  errorMessage?: string;
+  showType?: number;
+};
+
 export type Id = string | number;
 
 export type Org = {

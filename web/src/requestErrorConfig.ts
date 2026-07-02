@@ -1,6 +1,7 @@
 ﻿import type { RequestOptions } from '@@/plugin-request/request';
 import type { RequestConfig } from '@umijs/max';
 import { message, notification } from 'antd';
+import type { ApiResult } from './services/admin/types';
 
 // 错误处理方案： 错误类型
 enum ErrorShowType {
@@ -11,13 +12,7 @@ enum ErrorShowType {
   REDIRECT = 9,
 }
 // 与后端约定的响应数据格式
-interface ResponseStructure {
-  success: boolean;
-  data: unknown;
-  errorCode?: number | string;
-  errorMessage?: string;
-  showType?: ErrorShowType;
-}
+type ResponseStructure = ApiResult<unknown> & { showType?: ErrorShowType };
 
 /**
  * @name 错误处理

@@ -7,7 +7,7 @@ import React, { startTransition, useEffect, useState } from 'react';
 import { Footer } from '@/components';
 import { getCaptcha, login } from '@/services/admin';
 import { getCurrentUser, saveSession } from '@/services/admin/session';
-import type { CaptchaResult, LoginParams, LoginResult } from '@/services/admin/types';
+import type { CaptchaResult, LoginParams } from '@/services/admin/types';
 import Settings from '../../../../config/defaultSettings';
 
 const getSafeRedirectUrl = (redirect: string | null): string => {
@@ -20,11 +20,6 @@ const getSafeRedirectUrl = (redirect: string | null): string => {
   } catch {
     return '/';
   }
-};
-
-const getLoginResult = (result: LoginResult | { data?: LoginResult }): LoginResult => {
-  if ('data' in result && result.data) return result.data;
-  return result as LoginResult;
 };
 
 const getRedirectTarget = () => {
@@ -86,7 +81,7 @@ const Login: React.FC = () => {
 
   const handleSubmit = async (values: LoginParams) => {
     try {
-      const result = getLoginResult(await login({ ...values, codeId: captcha?.codeId }));
+      const result = await login({ ...values, codeId: captcha?.codeId });
       if (!result.accessToken) {
         throw new Error('登录成功但未返回 accessToken');
       }

@@ -41,6 +41,10 @@ func New() (*App, error) {
 	if err := service.SaveResourceFromSwagger("docs/swagger.json"); err != nil {
 		config.Log.Error(err.Error())
 	}
+	if err := service.InitMenus(); err != nil {
+		return nil, err
+	}
+	config.Log.Info("menus initialized successfully")
 	if err := service.InitAdminUser(); err != nil {
 		return nil, err
 	}

@@ -25,8 +25,10 @@ const ResourcePage = () => {
         columns={columns}
         request={async (params) => {
           const result = await getResources(params);
-          const data = Array.isArray(result) ? result : result.data || [];
-          return { data, total: Array.isArray(result) ? data.length : result.total, success: true };
+          if (Array.isArray(result)) {
+            return { data: result, total: result.length, success: true };
+          }
+          return { data: result.data || [], total: result.total, success: true };
         }}
       />
     </PageContainer>
