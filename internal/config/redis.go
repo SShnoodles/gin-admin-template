@@ -8,7 +8,7 @@ import (
 var RDB *redis.Client
 var CTX = context.Background()
 
-func init() {
+func InitRedis() {
 	RDB = redis.NewClient(&redis.Options{
 		Addr:     AppConfig.Redis.Addr,
 		Password: AppConfig.Redis.Password,

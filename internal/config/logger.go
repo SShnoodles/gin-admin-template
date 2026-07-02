@@ -10,7 +10,7 @@ import (
 var Logger *zap.Logger
 var Log *zap.SugaredLogger
 
-func init() {
+func InitLogger() {
 	lumberjackLogger := &lumberjack.Logger{
 		Filename:   AppConfig.Logging.File.Path + "/" + AppConfig.Logging.File.Name,
 		MaxSize:    100, // MB
@@ -29,7 +29,6 @@ func init() {
 	)
 
 	log := zap.New(coreLogger, zap.AddCaller())
-	defer log.Sync()
 
 	Logger = log
 	Log = log.Sugar()

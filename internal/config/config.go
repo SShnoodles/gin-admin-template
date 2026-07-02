@@ -1,8 +1,10 @@
 package config
 
 import (
-	"github.com/spf13/viper"
+	"fmt"
 	"os"
+
+	"github.com/spf13/viper"
 )
 
 type Config struct {
@@ -55,23 +57,41 @@ var AppConfig = &Config{
 	Language: "en",
 }
 
-func init() {
+func Init() error {
+	if err := LoadConfig(); err != nil {
+		return err
+	}
+	InitLogger()
+	if err := InitI18n(); err != nil {
+		return err
+	}
+	if err := InitIDGenerator(); err != nil {
+		return err
+	}
+	InitRedis()
+	if err := InitDB(); err != nil {
+		return err
+	}
+	return nil
+}
+
+func LoadConfig() error {
 	wd, err := os.Getwd()
 	if err != nil {
-		panic(err)
+		return err
 	}
 	v := viper.New()
 	v.SetConfigName("config")
 	v.AddConfigPath(wd)
 	v.AddConfigPath(wd + "/config")
 	v.SetConfigType("yml")
-	err = v.ReadInConfig()
 	if err := v.ReadInConfig(); err != nil {
-		Log.Fatal("read conf failed ", err)
+		return fmt.Errorf("read conf failed: %w", err)
 	}
 	if err := v.Unmarshal(&AppConfig); err != nil {
-		Log.Fatal("unable to decode into struct ", err)
+		return fmt.Errorf("unable to decode into struct: %w", err)
 	}
+	return nil
 }
 
 func IsDefaultLanguage() bool {

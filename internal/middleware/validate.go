@@ -13,7 +13,7 @@ import (
 var Validate *validator.Validate
 var Trans ut.Translator
 
-func init() {
+func InitValidator() error {
 	Validate = validator.New()
 
 	if config.IsDefaultLanguage() {
@@ -21,7 +21,7 @@ func init() {
 		trans, _ := uni.GetTranslator("en")
 		err := entranslations.RegisterDefaultTranslations(Validate, trans)
 		if err != nil {
-			config.Log.Fatal(err)
+			return err
 		}
 		Trans = trans
 	} else {
@@ -29,13 +29,17 @@ func init() {
 		trans, _ := uni.GetTranslator("zh")
 		err := zhtranslations.RegisterDefaultTranslations(Validate, trans)
 		if err != nil {
-			config.Log.Fatal(err)
+			return err
 		}
 		Trans = trans
 	}
+	return nil
 }
 
 func ValidateParam(param interface{}) string {
+	if Validate == nil {
+		return ""
+	}
 	if err := Validate.Struct(param); err != nil {
 		for _, err := range err.(validator.ValidationErrors) {
 			return err.Translate(Trans)

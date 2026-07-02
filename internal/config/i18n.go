@@ -8,7 +8,7 @@ import (
 
 var I18nLoc *i18n.Localizer
 
-func init() {
+func InitI18n() error {
 	var bundle *i18n.Bundle
 	if IsDefaultLanguage() {
 		bundle = i18n.NewBundle(language.English)
@@ -16,8 +16,12 @@ func init() {
 		bundle = i18n.NewBundle(language.Chinese)
 	}
 	bundle.RegisterUnmarshalFunc("toml", toml.Unmarshal)
-	bundle.MustLoadMessageFile("locales/en.toml")
-	bundle.MustLoadMessageFile("locales/zh-CN.toml")
+	if _, err := bundle.LoadMessageFile("locales/en.toml"); err != nil {
+		return err
+	}
+	if _, err := bundle.LoadMessageFile("locales/zh-CN.toml"); err != nil {
+		return err
+	}
 
 	if IsDefaultLanguage() {
 		I18nLoc = i18n.NewLocalizer(bundle, "en")
@@ -25,4 +29,5 @@ func init() {
 		I18nLoc = i18n.NewLocalizer(bundle, "zh-CN")
 	}
 
+	return nil
 }

@@ -11,7 +11,7 @@ import (
 
 var DB *gorm.DB
 
-func init() {
+func InitDB() error {
 	logger := zapgorm2.New(zap.L())
 	logger.SetAsDefault()
 
@@ -20,9 +20,12 @@ func init() {
 		Logger: logger,
 	})
 	if err != nil {
-		Log.Fatalf("Connection mysql:%s\n", err)
+		return err
 	}
 	sqlDB, err := db.DB()
+	if err != nil {
+		return err
+	}
 
 	// SetMaxIdleConns sets the maximum number of connections in the idle connection pool.
 	sqlDB.SetMaxIdleConns(10)
@@ -35,11 +38,11 @@ func init() {
 
 	DB = db
 
-	AutoMigrate()
+	return AutoMigrate()
 }
 
-func AutoMigrate() {
-	DB.AutoMigrate(&domain.User{},
+func AutoMigrate() error {
+	return DB.AutoMigrate(&domain.User{},
 		&domain.Org{},
 		&domain.Menu{},
 		&domain.Role{},

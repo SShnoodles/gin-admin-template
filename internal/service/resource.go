@@ -8,16 +8,14 @@ import (
 	"os"
 )
 
-func SaveResourceFromSwagger(docPath string) {
+func SaveResourceFromSwagger(docPath string) error {
 	file, err := os.ReadFile(docPath)
 	if err != nil {
-		config.Log.Error(err.Error())
-		return
+		return err
 	}
 	var sw spec.Swagger
 	if err := json.Unmarshal(file, &sw); err != nil {
-		config.Log.Error(err.Error())
-		return
+		return err
 	}
 	for path, pathItem := range sw.Paths.Paths {
 
@@ -36,14 +34,19 @@ func SaveResourceFromSwagger(docPath string) {
 				oldResource, _ := FindResourceByMethodAndPath(method, path)
 				if oldResource == (domain.Resource{}) {
 					resource.Id = config.IdGenerate()
-					Insert(&resource)
+					if err := Insert(&resource); err != nil {
+						return err
+					}
 				} else {
 					resource.Id = oldResource.Id
-					Update(&resource)
+					if err := Update(&resource); err != nil {
+						return err
+					}
 				}
 			}
 		}
 	}
+	return nil
 }
 
 func FindResourceByMethodAndPath(method, path string) (domain.Resource, error) {

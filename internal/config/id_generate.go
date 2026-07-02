@@ -6,8 +6,10 @@ import (
 
 var node *snowflake.Node
 
-func init() {
-	node, _ = snowflake.NewNode(1)
+func InitIDGenerator() error {
+	var err error
+	node, err = snowflake.NewNode(1)
+	return err
 }
 
 func IdGenerate() int64 {
