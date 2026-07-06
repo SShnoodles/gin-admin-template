@@ -119,6 +119,7 @@ info:
   contact: {}
   title: Admin API
   version: 1.0.0
+basePath: /api
 paths:
   /login/account:
     post:

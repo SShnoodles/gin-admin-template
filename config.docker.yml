@@ -1,0 +1,22 @@
+server:
+  port: 8080
+logging:
+  level: info
+  file:
+    name: app.log
+    path: logs
+language: en
+datasource:
+  driver: mysql
+  url: tcp(mysql:3306)/test?charset=utf8mb4&parseTime=True&loc=Local
+  username: root
+  password: 123456
+jwt:
+  secret: test
+  expire: 7
+verification:
+  resourceEnabled: false
+redis:
+  addr: redis:6379
+  password:
+  db: 0

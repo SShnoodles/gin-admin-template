@@ -8,6 +8,7 @@ import (
 
 // @title           Admin API
 // @version         1.0.0
+// @BasePath        /api
 // @securityDefinitions.apikey ApiKeyAuth
 // @in header
 // @name Authorization

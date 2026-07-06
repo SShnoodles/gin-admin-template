@@ -6,6 +6,7 @@ import (
 	"gin-admin-template/internal/domain"
 	"github.com/go-openapi/spec"
 	"os"
+	"strings"
 )
 
 func SaveResourceFromSwagger(docPath string) error {
@@ -17,7 +18,9 @@ func SaveResourceFromSwagger(docPath string) error {
 	if err := json.Unmarshal(file, &sw); err != nil {
 		return err
 	}
+	basePath := strings.TrimRight(sw.BasePath, "/")
 	for path, pathItem := range sw.Paths.Paths {
+		resourcePath := basePath + path
 
 		for method, operation := range map[string]*spec.Operation{
 			"get":    pathItem.Get,
@@ -29,9 +32,9 @@ func SaveResourceFromSwagger(docPath string) error {
 				resource := domain.Resource{
 					Name:   operation.Summary,
 					Method: method,
-					Path:   path,
+					Path:   resourcePath,
 				}
-				oldResource, _ := FindResourceByMethodAndPath(method, path)
+				oldResource, _ := FindResourceByMethodAndPath(method, resourcePath)
 				if oldResource == (domain.Resource{}) {
 					resource.Id = config.IdGenerate()
 					if err := Insert(&resource); err != nil {

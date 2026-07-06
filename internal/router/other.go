@@ -7,7 +7,7 @@ import (
 )
 
 func SetOtherRouter(router *gin.Engine) {
-	apiRouter := router.Group("/project")
+	apiRouter := router.Group("/api/project")
 	apiRouter.Use(middleware.CORS())
 	{
 		apiRouter.GET("/version", api.GetVersion)

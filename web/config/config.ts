@@ -24,6 +24,7 @@ export default defineConfig({
   hash: true,
   esbuildMinifyIIFE: true,
 
+  outputPath: '../internal/web/dist',
   publicPath: PUBLIC_PATH,
 
   /**

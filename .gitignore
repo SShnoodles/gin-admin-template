@@ -2,3 +2,9 @@
 .vscode
 config.yml
 logs
+web/dist
+internal/web/dist
+web/node_modules
+web/.umi
+web/.umi-production
+web/.cache

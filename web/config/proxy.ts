@@ -14,7 +14,6 @@ export default {
     '/api/': {
       target: 'http://127.0.0.1:8080',
       changeOrigin: true,
-      pathRewrite: { '^/api': '' },
     },
   },
   /**
@@ -25,14 +24,12 @@ export default {
     '/api/': {
       target: 'http://127.0.0.1:8080',
       changeOrigin: true,
-      pathRewrite: { '^/api': '' },
     },
   },
   pre: {
     '/api/': {
       target: 'your pre url',
       changeOrigin: true,
-      pathRewrite: { '^/api': '' },
     },
   },
 };

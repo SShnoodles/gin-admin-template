@@ -1,12 +1,11 @@
 package app
 
 import (
-	"gin-admin-template/internal/api"
 	"gin-admin-template/internal/config"
 	"gin-admin-template/internal/middleware"
 	"gin-admin-template/internal/router"
 	"gin-admin-template/internal/service"
-	"os"
+	webui "gin-admin-template/internal/web"
 	"strconv"
 	"time"
 
@@ -36,7 +35,7 @@ func New() (*App, error) {
 
 	router.SetApiRouter(engine)
 	router.SetOtherRouter(engine)
-	registerStaticRoutes(engine)
+	webui.RegisterRoutes(engine)
 
 	if err := service.SaveResourceFromSwagger("docs/swagger.json"); err != nil {
 		config.Log.Error(err.Error())
@@ -59,14 +58,4 @@ func (a *App) Run() error {
 	addr := ":" + strconv.Itoa(config.AppConfig.Server.Port)
 	config.Log.Infof("Listening on %d", config.AppConfig.Server.Port)
 	return a.Engine.Run(addr)
-}
-
-func registerStaticRoutes(engine *gin.Engine) {
-	dir, err := os.Getwd()
-	if err != nil {
-		config.Log.Warnf("failed to get working directory: %v", err)
-		return
-	}
-	engine.Static("/assets", dir+"/web/dist/assets")
-	engine.GET("/", api.HtmlHandler)
 }
